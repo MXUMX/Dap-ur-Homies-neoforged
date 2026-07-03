@@ -1,0 +1,41 @@
+package com.cooptest;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.server.level.ServerPlayer;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import java.util.UUID;
+public class PlayerCleanupHandler {
+    public static void register() {
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            ServerPlayer player = handler.getPlayer();
+            UUID uuid = player.getUUID();
+            PoseNetworking.poseStates.remove(uuid);
+            GrabMechanic.fullCleanup(uuid);
+            HighFiveHandler.cleanup(uuid);
+            PushInteractionHandler.pushImmunity.remove(uuid);
+            ChargedDapHandler.cleanup(uuid);
+            QTEManager.cancelQTE(uuid);
+            DapComboChain.cancelCombo(uuid);
+            MahitoTrollHandler.cleanup(uuid);
+            FallDapHandler.cleanup(uuid);
+            MeteorStrikeHandler.cleanup(uuid);
+            ArmPoseTracker.cleanup(uuid);
+            MarioJumpHandler.cleanup(uuid);
+            DivineFlamCombo.cleanup(uuid);
+            KickHandler.cleanup(uuid);
+            NormalFacingDapHandler.cleanup(uuid);
+            SitHandler.cleanup(uuid);
+            SpinHandler.cleanup(uuid);
+            GroundPoundHandler.cleanup(uuid);
+            ChargedDapHandler.cleanup(uuid);
+            for (ServerPlayer other : server.getPlayerList().getPlayers()) {
+                if (!other.getUUID().equals(uuid)) {
+                    try {
+                        ServerPlayNetworking.send(other,
+                                new PoseNetworking.AnimStateSyncPayload(uuid, 0));
+                    } catch (Exception e) {
+                    }
+                }
+            }
+        });
+    }
+}

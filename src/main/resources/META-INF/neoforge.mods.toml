@@ -1,0 +1,32 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "MIT"
+
+[[mods]]
+modId = "coopmoves"
+version = "${version}"
+displayName = "Coop Moves"
+description = "Cooperative multiplayer mechanics! Grab & throw players, perform epic daps, high fives, push, catch, and more!"
+authors = "Anteryo"
+logoFile = "assets/testcoop/icon.png"
+
+[[dependencies.coopmoves]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.coopmoves]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1,1.21.2)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.coopmoves]]
+modId = "player_animation_library"
+type = "required"
+versionRange = "[1.1.4,)"
+ordering = "AFTER"
+side = "BOTH"
