@@ -1,4 +1,4 @@
-[![Modrinth Downloads](https://img.shields.io/modrinth/dt/xf9PORQx?logo=modrinth&style=for-the-badge)](https://modrinth.com/mod/dap-ur-homies-unofficially-neoforged) [![CurseForge Downloads](https://img.shields.io/curseforge/dt/1485396?logo=curseforge&style=for-the-badge)](https://www.curseforge.com/minecraft/mc-mods/dap-ur-homies-unofficially-neoforged)
+[![Modrinth Downloads](https://img.shields.io/modrinth/dt/1Ls2pii3?logo=modrinth&style=for-the-badge)](https://modrinth.com/mod/dap-ur-homies-unofficially-neoforged) [![CurseForge Downloads](https://img.shields.io/curseforge/dt/1597240?logo=curseforge&style=for-the-badge)](https://www.curseforge.com/minecraft/mc-mods/dap-ur-homies-unofficially-neoforged)
 
 # Dap ur HOMIES
 
