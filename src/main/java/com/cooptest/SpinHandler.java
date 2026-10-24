@@ -6,7 +6,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -25,17 +25,17 @@ public class SpinHandler {
     private static final int    ANIM_SPIN          = 64;
     private static final int    ANIM_NONE          = 0;
     public record SpinStartPayload() implements CustomPacketPayload {
-        public static final Type<SpinStartPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("testcoop", "spin_start"));
+        public static final Type<SpinStartPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("testcoop", "spin_start"));
         public static final StreamCodec<FriendlyByteBuf, SpinStartPayload> CODEC = StreamCodec.unit(new SpinStartPayload());
         @Override public Type<SpinStartPayload> type() { return ID; }
     }
     public record SpinStopPayload() implements CustomPacketPayload {
-        public static final Type<SpinStopPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("testcoop", "spin_stop"));
+        public static final Type<SpinStopPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("testcoop", "spin_stop"));
         public static final StreamCodec<FriendlyByteBuf, SpinStopPayload> CODEC = StreamCodec.unit(new SpinStopPayload());
         @Override public Type<SpinStopPayload> type() { return ID; }
     }
     public record SpinSyncPayload(UUID playerId, boolean spinning) implements CustomPacketPayload {
-        public static final Type<SpinSyncPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("testcoop", "spin_sync"));
+        public static final Type<SpinSyncPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("testcoop", "spin_sync"));
         public static final StreamCodec<FriendlyByteBuf, SpinSyncPayload> CODEC =
                 StreamCodec.ofMember(
                         (val, buf) -> { buf.writeUUID(val.playerId()); buf.writeBoolean(val.spinning()); },
@@ -44,7 +44,7 @@ public class SpinHandler {
         @Override public Type<SpinSyncPayload> type() { return ID; }
     }
     public record HelicopterLaunchPayload(UUID spinnerId, UUID riderId) implements CustomPacketPayload {
-        public static final Type<HelicopterLaunchPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("testcoop", "helicopter_launch"));
+        public static final Type<HelicopterLaunchPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("testcoop", "helicopter_launch"));
         public static final StreamCodec<FriendlyByteBuf, HelicopterLaunchPayload> CODEC =
                 StreamCodec.ofMember(
                         (val, buf) -> { buf.writeUUID(val.spinnerId()); buf.writeUUID(val.riderId()); },
@@ -79,17 +79,17 @@ public class SpinHandler {
                 spinStartTime.put(id, System.currentTimeMillis());
                 spinYaw.put(id, player.getVisualRotationYInDegrees());
                 spinTick.put(id, 0);
-                DapHoldHandler.forceUnfreeze(player.getServer(), id);
+                DapHoldHandler.forceUnfreeze(player.level().getServer(), id);
                 PoseNetworking.broadcastAnimState(player, ANIM_NONE);
                 PoseNetworking.broadcastAnimState(player, ANIM_SPIN);
-                broadcastSpinSync(player.getServer(), id, true);
-                player.serverLevel().playSound(null, player.getX(), player.getY(), player.getZ(),
+                broadcastSpinSync(player.level().getServer(), id, true);
+                player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.8f, 1.6f);
             });
         });
         ServerPlayNetworking.registerGlobalReceiver(SpinStopPayload.ID, (payload, context) -> {
             ServerPlayer player = context.player();
-            context.server().execute(() -> stopSpin(player.getServer(), player.getUUID()));
+            context.server().execute(() -> stopSpin(player.level().getServer(), player.getUUID()));
         });
     }
     public static void tick(MinecraftServer server) {
@@ -140,13 +140,13 @@ public class SpinHandler {
             }
             Vec3 pos = player.position().add(0, 0.9, 0);
             double angle = Math.toRadians(currentYaw);
-            player.serverLevel().sendParticles(
+            player.level().sendParticles(
                     ParticleTypes.CLOUD,
                     pos.x + Math.cos(angle) * 0.5, pos.y, pos.z + Math.sin(angle) * 0.5,
                     2, 0.05, 0.05, 0.05, 0.01);
             int tck = spinTick.merge(id, 1, Integer::sum);
             if (tck % SOUND_INTERVAL == 0) {
-                player.serverLevel().playSound(null, player.getX(), player.getY(), player.getZ(),
+                player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.PHANTOM_FLAP, SoundSource.PLAYERS, 0.5f, 1.4f);
             }
             if (!hasRider) {
@@ -157,7 +157,7 @@ public class SpinHandler {
     private static void checkHelicopterSweep(MinecraftServer server, ServerPlayer spinner) {
         UUID spinnerId = spinner.getUUID();
         Vec3 sPos = spinner.position();
-        ServerLevel world = spinner.serverLevel();
+        ServerLevel world = spinner.level();
         AABB sweepBox = new AABB(
                 sPos.x - HELICOPTER_H_RANGE, sPos.y - 0.5, sPos.z - HELICOPTER_H_RANGE,
                 sPos.x + HELICOPTER_H_RANGE, sPos.y + HELICOPTER_V_RANGE, sPos.z + HELICOPTER_H_RANGE
@@ -170,7 +170,7 @@ public class SpinHandler {
             if (helicopterSpinner.containsKey(targetId)) continue;
             if (GrabMechanic.holding.containsKey(spinnerId)) continue;
             if (GrabMechanic.heldBy.containsKey(targetId)) continue;
-            target.startRiding(spinner, true);
+            target.startRiding(spinner, true, true);
             helicopterRider.put(spinnerId, targetId);
             helicopterSpinner.put(targetId, spinnerId);
             ClientboundSetPassengersPacket pkt = new ClientboundSetPassengersPacket(spinner);
@@ -196,8 +196,8 @@ public class SpinHandler {
                     ModSounds.HELI, SoundSource.PLAYERS, 1.0f, 1.0f);
             world.playSound(null, sPos.x, sPos.y, sPos.z,
                     ModSounds.EXPLOSION_IMPACT, SoundSource.PLAYERS, 0.8f, 0.5f);
-            spinner.displayClientMessage(net.minecraft.network.chat.Component.literal("§c§l🚀 HELICOPTER! Press SHIFT for MEGA GROUND POUND!"), true);
-            target.displayClientMessage(net.minecraft.network.chat.Component.literal("§c§l🚀 You're riding the helicopter!"), true);
+            com.cooptest.neoforge.PlayerActions.message(spinner, net.minecraft.network.chat.Component.literal("§c§l🚀 HELICOPTER! Press SHIFT for MEGA GROUND POUND!"), true);
+            com.cooptest.neoforge.PlayerActions.message(target, net.minecraft.network.chat.Component.literal("§c§l🚀 You're riding the helicopter!"), true);
             break;
         }
     }
@@ -229,7 +229,7 @@ public class SpinHandler {
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             ServerPlayNetworking.send(p, launchPkt);
         }
-        ServerLevel world = spinner.serverLevel();
+        ServerLevel world = spinner.level();
         Vec3 pos = spinner.position().add(0, 1, 0);
         world.sendParticles(ParticleTypes.EXPLOSION, pos.x, pos.y, pos.z, 3, 0.3, 0.3, 0.3, 0);
         world.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, pos.x, pos.y, pos.z, 20, 0.5, 0.5, 0.5, 0.3);
@@ -237,8 +237,8 @@ public class SpinHandler {
                 SoundEvents.FIREWORK_ROCKET_LARGE_BLAST, SoundSource.PLAYERS, 1.2f, 0.7f);
         world.playSound(null, pos.x, pos.y, pos.z,
                 ModSounds.EXPLOSION_IMPACT, SoundSource.PLAYERS, 0.8f, 0.5f);
-        spinner.displayClientMessage(net.minecraft.network.chat.Component.literal("§c§l🚀 HELICOPTER LAUNCH!"), true);
-        if (rider != null) rider.displayClientMessage(net.minecraft.network.chat.Component.literal("§c§l🚀 Helicopter launched!"), true);
+        com.cooptest.neoforge.PlayerActions.message(spinner, net.minecraft.network.chat.Component.literal("§c§l🚀 HELICOPTER LAUNCH!"), true);
+        if (rider != null) com.cooptest.neoforge.PlayerActions.message(rider, net.minecraft.network.chat.Component.literal("§c§l🚀 Helicopter launched!"), true);
     }
     private static void detachHelicopterRider(MinecraftServer server, UUID spinnerId) {
         UUID riderId = helicopterRider.remove(spinnerId);
@@ -248,7 +248,7 @@ public class SpinHandler {
         ServerPlayer spinner = server.getPlayerList().getPlayer(spinnerId);
         if (rider != null) {
             rider.stopRiding();
-            rider.teleportTo(rider.getX(), rider.getY(), rider.getZ());
+            com.cooptest.neoforge.PlayerActions.teleport(rider, rider.getX(), rider.getY(), rider.getZ());
         }
         if (spinner != null) {
             ClientboundSetPassengersPacket pkt = new ClientboundSetPassengersPacket(spinner);
@@ -290,7 +290,7 @@ public class SpinHandler {
         ServerPlayer spinner = server.getPlayerList().getPlayer(spinnerId);
         if (rider != null) {
             rider.stopRiding();
-            rider.teleportTo(rider.getX(), rider.getY(), rider.getZ());
+            com.cooptest.neoforge.PlayerActions.teleport(rider, rider.getX(), rider.getY(), rider.getZ());
         }
         if (spinner != null) {
             ClientboundSetPassengersPacket pkt = new ClientboundSetPassengersPacket(spinner);

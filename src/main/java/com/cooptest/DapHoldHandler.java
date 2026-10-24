@@ -6,7 +6,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -24,63 +24,63 @@ public class DapHoldHandler {
     private static final double STOP_DISTANCE   = 1.5;
     private static final double TP_SPEED        = 0.08;
     public record DapHoldStartPayload(UUID playerId, UUID partnerId, int role) implements CustomPacketPayload {
-        public static final Type<DapHoldStartPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "daphold_start"));
+        public static final Type<DapHoldStartPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("cooptest", "daphold_start"));
         public static final StreamCodec<FriendlyByteBuf, DapHoldStartPayload> CODEC = StreamCodec.ofMember(
                 (p, buf) -> { buf.writeUUID(p.playerId()); buf.writeUUID(p.partnerId()); buf.writeInt(p.role()); },
                 buf -> new DapHoldStartPayload(buf.readUUID(), buf.readUUID(), buf.readInt()));
         @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
     public record DapHoldWindowPayload(boolean open) implements CustomPacketPayload {
-        public static final Type<DapHoldWindowPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "daphold_window"));
+        public static final Type<DapHoldWindowPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("cooptest", "daphold_window"));
         public static final StreamCodec<FriendlyByteBuf, DapHoldWindowPayload> CODEC = StreamCodec.ofMember(
                 (p, buf) -> buf.writeBoolean(p.open()), buf -> new DapHoldWindowPayload(buf.readBoolean()));
         @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
     public record DapHoldLoopPayload(boolean looping) implements CustomPacketPayload {
-        public static final Type<DapHoldLoopPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "daphold_loop"));
+        public static final Type<DapHoldLoopPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("cooptest", "daphold_loop"));
         public static final StreamCodec<FriendlyByteBuf, DapHoldLoopPayload> CODEC = StreamCodec.ofMember(
                 (p, buf) -> buf.writeBoolean(p.looping()), buf -> new DapHoldLoopPayload(buf.readBoolean()));
         @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
     public record DapHoldEndPayload(boolean wasLooping) implements CustomPacketPayload {
-        public static final Type<DapHoldEndPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "daphold_end"));
+        public static final Type<DapHoldEndPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("cooptest", "daphold_end"));
         public static final StreamCodec<FriendlyByteBuf, DapHoldEndPayload> CODEC = StreamCodec.ofMember(
                 (p, buf) -> buf.writeBoolean(p.wasLooping()), buf -> new DapHoldEndPayload(buf.readBoolean()));
         @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
     public record DapHoldFreezePayload(UUID playerId, boolean frozen) implements CustomPacketPayload {
-        public static final Type<DapHoldFreezePayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "daphold_freeze"));
+        public static final Type<DapHoldFreezePayload> ID = new Type<>(Identifier.fromNamespaceAndPath("cooptest", "daphold_freeze"));
         public static final StreamCodec<FriendlyByteBuf, DapHoldFreezePayload> CODEC = StreamCodec.ofMember(
                 (p, buf) -> { buf.writeUUID(p.playerId()); buf.writeBoolean(p.frozen()); },
                 buf -> new DapHoldFreezePayload(buf.readUUID(), buf.readBoolean()));
         @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
     public record DapHoldJHoldPayload() implements CustomPacketPayload {
-        public static final Type<DapHoldJHoldPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "daphold_jhold"));
+        public static final Type<DapHoldJHoldPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("cooptest", "daphold_jhold"));
         public static final StreamCodec<FriendlyByteBuf, DapHoldJHoldPayload> CODEC = StreamCodec.unit(new DapHoldJHoldPayload());
         @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
     public record DapHoldJReleasePayload() implements CustomPacketPayload {
-        public static final Type<DapHoldJReleasePayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "daphold_jrelease"));
+        public static final Type<DapHoldJReleasePayload> ID = new Type<>(Identifier.fromNamespaceAndPath("cooptest", "daphold_jrelease"));
         public static final StreamCodec<FriendlyByteBuf, DapHoldJReleasePayload> CODEC = StreamCodec.unit(new DapHoldJReleasePayload());
         @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
     public record GroupJoinedPayload(UUID joinerId, UUID hfId, int memberCount) implements CustomPacketPayload {
-        public static final Type<GroupJoinedPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "daphold_group_join"));
+        public static final Type<GroupJoinedPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("cooptest", "daphold_group_join"));
         public static final StreamCodec<FriendlyByteBuf, GroupJoinedPayload> CODEC = StreamCodec.ofMember(
                 (p, buf) -> { buf.writeUUID(p.joinerId()); buf.writeUUID(p.hfId()); buf.writeInt(p.memberCount()); },
                 buf -> new GroupJoinedPayload(buf.readUUID(), buf.readUUID(), buf.readInt()));
         @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
     public record GroupResultPayload(boolean perfect, int memberCount) implements CustomPacketPayload {
-        public static final Type<GroupResultPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "daphold_group_result"));
+        public static final Type<GroupResultPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("cooptest", "daphold_group_result"));
         public static final StreamCodec<FriendlyByteBuf, GroupResultPayload> CODEC = StreamCodec.ofMember(
                 (p, buf) -> { buf.writeBoolean(p.perfect()); buf.writeInt(p.memberCount()); },
                 buf -> new GroupResultPayload(buf.readBoolean(), buf.readInt()));
         @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
     public record GroupJoinPayload() implements CustomPacketPayload {
-        public static final Type<GroupJoinPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "daphold_group_join_req"));
+        public static final Type<GroupJoinPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("cooptest", "daphold_group_join_req"));
         public static final StreamCodec<FriendlyByteBuf, GroupJoinPayload> CODEC = StreamCodec.unit(new GroupJoinPayload());
         @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
@@ -141,11 +141,11 @@ public class DapHoldHandler {
         p1.setYRot(yawP1);
         p1.setYBodyRot(yawP1);
         p1.setYHeadRot(yawP1);
-        p1.teleportTo(p1.serverLevel(), p1Pos.x, p1Pos.y, p1Pos.z, yawP1, 0.0f);
+        com.cooptest.neoforge.PlayerActions.teleport(p1, p1.level(), p1Pos.x, p1Pos.y, p1Pos.z, yawP1, 0.0f);
         p2.setYRot(yawP2);
         p2.setYBodyRot(yawP2);
         p2.setYHeadRot(yawP2);
-        p2.teleportTo(p2.serverLevel(), p2Pos.x, p2Pos.y, p2Pos.z, yawP2, 0.0f);
+        com.cooptest.neoforge.PlayerActions.teleport(p2, p2.level(), p2Pos.x, p2Pos.y, p2Pos.z, yawP2, 0.0f);
     }
     private static boolean arePlayersFacingEachOther(ServerPlayer p1, ServerPlayer p2) {
         net.minecraft.world.phys.Vec3 p1Pos = p1.position();
@@ -164,8 +164,8 @@ public class DapHoldHandler {
         UUID dapId = dapPlayer.getUUID();
         if (isInDapHold(hfId) || isInDapHold(dapId)) return;
         if (!arePlayersFacingEachOther(hfPlayer, dapPlayer)) {
-            hfPlayer.displayClientMessage(net.minecraft.network.chat.Component.literal("§cNot facing each other!"), true);
-            dapPlayer.displayClientMessage(net.minecraft.network.chat.Component.literal("§cNot facing each other!"), true);
+            com.cooptest.neoforge.PlayerActions.message(hfPlayer, net.minecraft.network.chat.Component.literal("§cNot facing each other!"), true);
+            com.cooptest.neoforge.PlayerActions.message(dapPlayer, net.minecraft.network.chat.Component.literal("§cNot facing each other!"), true);
             System.out.println("[DapHold]  FAILED - Players not facing each other!");
             return;
         }
@@ -181,15 +181,15 @@ public class DapHoldHandler {
         );
         activePairs.put(hfId, dapId);
         pairStartTime.put(hfId, System.currentTimeMillis());
-        sendFreeze(hfPlayer.getServer(), hfId,  true);
-        sendFreeze(hfPlayer.getServer(), dapId, true);
+        sendFreeze(hfPlayer.level().getServer(), hfId,  true);
+        sendFreeze(hfPlayer.level().getServer(), dapId, true);
         System.out.println("[DapHold] Sent freeze to both players");
         spawnHandStand(hfPlayer, dapPlayer);
         System.out.println("[DapHold] Sending DapHoldStartPayload:");
         System.out.println("  - HF player (" + hfPlayer.getName().getString() + "): role=0 (highfive_dap)");
         System.out.println("  - DAP player (" + dapPlayer.getName().getString() + "): role=1 (dap_high)");
-        sendToAll(hfPlayer.getServer(), new DapHoldStartPayload(hfId,  dapId, 0));
-        sendToAll(hfPlayer.getServer(), new DapHoldStartPayload(dapId, hfId,  1));
+        sendToAll(hfPlayer.level().getServer(), new DapHoldStartPayload(hfId,  dapId, 0));
+        sendToAll(hfPlayer.level().getServer(), new DapHoldStartPayload(dapId, hfId,  1));
         PoseNetworking.broadcastAnimState(hfPlayer, 38);
         PoseNetworking.broadcastAnimState(dapPlayer, 39);
     }
@@ -216,8 +216,8 @@ public class DapHoldHandler {
             if (!windowOpen.contains(hfId) && elapsed >= J_WINDOW_START_MS) {
                 windowOpen.add(hfId);
                 sendToAll(server, new DapHoldWindowPayload(true));
-                hfPlayer.displayClientMessage(net.minecraft.network.chat.Component.literal("§e⚡ HOLD J "), true);
-                dapPlayer.displayClientMessage(net.minecraft.network.chat.Component.literal("§e⚡ HOLD J "), true);
+                com.cooptest.neoforge.PlayerActions.message(hfPlayer, net.minecraft.network.chat.Component.literal("§e⚡ HOLD J "), true);
+                com.cooptest.neoforge.PlayerActions.message(dapPlayer, net.minecraft.network.chat.Component.literal("§e⚡ HOLD J "), true);
             }
             if (!impactFired.contains(hfId) && elapsed >= IMPACT_MS) {
                 impactFired.add(hfId);
@@ -252,7 +252,7 @@ public class DapHoldHandler {
             UUID dapId = activePairs.get(hfId);
             ServerPlayer dapPlayer = server.getPlayerList().getPlayer(dapId);
             if (hfPlayer == null || dapPlayer == null) continue;
-            ServerLevel world = hfPlayer.serverLevel();
+            ServerLevel world = hfPlayer.level();
             ArmorStand stand = handStands.get(hfId);
             if (stand != null && !stand.isRemoved()) {
                 Vec3 impactPos = stand.position();
@@ -279,7 +279,7 @@ public class DapHoldHandler {
                     ServerPlayer jp = server.getPlayerList().getPlayer(jId);
                     if (jp != null) {
                         PoseNetworking.broadcastAnimState(jp, 41);
-                        jp.displayClientMessage(net.minecraft.network.chat.Component.literal("§7Left the group"), true);
+                        com.cooptest.neoforge.PlayerActions.message(jp, net.minecraft.network.chat.Component.literal("§7Left the group"), true);
                     }
                 }
                 if (server.getTickCount() % 4 == 0) {
@@ -325,12 +325,12 @@ public class DapHoldHandler {
         joinerJLast.remove(id);
         UUID joinerHfId = joinerGroup.get(id);
         if (joinerHfId != null) {
-            logGroupRelease(id, joinerHfId, player.getServer());
+            logGroupRelease(id, joinerHfId, player.level().getServer());
             return;
         }
         UUID hfId = getPairHfId(id);
         if (hfId == null || !looping.contains(hfId)) return;
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         if (server == null) return;
         if (groupJoiners.containsKey(hfId) && !groupJoiners.get(hfId).isEmpty()) {
             logGroupRelease(id, hfId, server);
@@ -352,7 +352,7 @@ public class DapHoldHandler {
         for (UUID hfId : looping) {
             UUID dapId = activePairs.get(hfId);
             if (hfId.equals(id) || (dapId != null && dapId.equals(id))) continue;
-            Vec3 mid = getGroupMidpoint(hfId, player.getServer());
+            Vec3 mid = getGroupMidpoint(hfId, player.level().getServer());
             if (player.position().distanceTo(mid) > GROUP_JOIN_RADIUS) continue;
             addGroupJoiner(player, hfId);
             return;
@@ -360,7 +360,7 @@ public class DapHoldHandler {
     }
     private static void addGroupJoiner(ServerPlayer joiner, UUID hfId) {
         UUID id = joiner.getUUID();
-        MinecraftServer server = joiner.getServer();
+        MinecraftServer server = joiner.level().getServer();
         groupJoiners.computeIfAbsent(hfId, k -> new HashSet<>()).add(id);
         joinerGroup.put(id, hfId);
         joinerJLast.put(id, System.currentTimeMillis());
@@ -370,9 +370,9 @@ public class DapHoldHandler {
         GroupJoinedPayload pkt = new GroupJoinedPayload(id, hfId, total);
         sendToAll(server, pkt);
         faceGroupCenter(hfId, server);
-        joiner.displayClientMessage(net.minecraft.network.chat.Component.literal("§a§l⚡ JOINED GROUP DAP! (" + total + " players)"), true);
+        com.cooptest.neoforge.PlayerActions.message(joiner, net.minecraft.network.chat.Component.literal("§a§l⚡ JOINED GROUP DAP! (" + total + " players)"), true);
         ServerPlayer hfP = server.getPlayerList().getPlayer(hfId);
-        if (hfP != null) hfP.displayClientMessage(net.minecraft.network.chat.Component.literal("§e§l+" + joiner.getName().getString() + " joined! (" + total + " total)"), true);
+        if (hfP != null) com.cooptest.neoforge.PlayerActions.message(hfP, net.minecraft.network.chat.Component.literal("§e§l+" + joiner.getName().getString() + " joined! (" + total + " total)"), true);
     }
     private static void logGroupRelease(UUID id, UUID hfId, MinecraftServer server) {
         if (server == null) return;
@@ -405,7 +405,7 @@ public class DapHoldHandler {
         Vec3 center = all.stream().map(ServerPlayer::position)
                 .reduce(Vec3.ZERO, Vec3::add)
                 .scale(1.0 / Math.max(1, all.size()));
-        ServerLevel world = hfP != null ? hfP.serverLevel() : server.overworld();
+        ServerLevel world = hfP != null ? hfP.level() : server.overworld();
         if (perfect) {
             for (ServerPlayer p : all) {
                 PoseNetworking.broadcastAnimState(p, 68);
@@ -423,14 +423,14 @@ public class DapHoldHandler {
                         p.push(0, 0.4 + mc * 0.1, 0);
                         p.hurtMarked = true;
                         p.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                                net.minecraft.world.effect.MobEffects.MOVEMENT_SPEED, 120, Math.min(2, mc - 1)));
+                                net.minecraft.world.effect.MobEffects.SPEED, 120, Math.min(2, mc - 1)));
                         p.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                                net.minecraft.world.effect.MobEffects.JUMP, 120, 0));
-                        p.displayClientMessage(net.minecraft.network.chat.Component.literal("§6§l✨ PERFECT GROUP DAP! §e" + mc + " players!"), true);
+                                net.minecraft.world.effect.MobEffects.JUMP_BOOST, 120, 0));
+                        com.cooptest.neoforge.PlayerActions.message(p, net.minecraft.network.chat.Component.literal("§6§l✨ PERFECT GROUP DAP! §e" + mc + " players!"), true);
                     }
                     for (int i = 0; i < mc * 3; i++) {
-                        double ox = (worldFinal.random.nextDouble() - 0.5) * 3;
-                        double oz = (worldFinal.random.nextDouble() - 0.5) * 3;
+                        double ox = (worldFinal.getRandom().nextDouble() - 0.5) * 3;
+                        double oz = (worldFinal.getRandom().nextDouble() - 0.5) * 3;
                         worldFinal.sendParticles(ParticleTypes.FIREWORK,
                                 centerFinal.x + ox, centerFinal.y + 2 + i * 0.5, centerFinal.z + oz,
                                 6, 0.3, 0.1, 0.3, 0.12);
@@ -452,7 +452,7 @@ public class DapHoldHandler {
                 if (dir.lengthSqr() < 0.01) dir = new Vec3(1, 0, 0);
                 p.push(dir.x * 0.9, 0.3, dir.z * 0.9);
                 p.hurtMarked = true;
-                p.displayClientMessage(net.minecraft.network.chat.Component.literal("§c❌ Release not synced!"), true);
+                com.cooptest.neoforge.PlayerActions.message(p, net.minecraft.network.chat.Component.literal("§c❌ Release not synced!"), true);
             }
             world.sendParticles(ParticleTypes.POOF,
                     center.x, center.y + 1, center.z, 12, 0.4, 0.3, 0.4, 0.05);
@@ -543,19 +543,19 @@ public class DapHoldHandler {
         Vec3 dir   = dap.position().subtract(hf.position()).normalize();
         Vec3 newHf  = hf.position().add(dir.scale(move));
         Vec3 newDap = dap.position().add(dir.reverse().scale(move));
-        hf.teleportTo(hf.serverLevel(),   newHf.x,  newHf.y,  newHf.z,  hf.getYRot(),  hf.getXRot());
-        dap.teleportTo(dap.serverLevel(), newDap.x, newDap.y, newDap.z, dap.getYRot(), dap.getXRot());
+        com.cooptest.neoforge.PlayerActions.teleport(hf, hf.level(),   newHf.x,  newHf.y,  newHf.z,  hf.getYRot(),  hf.getXRot());
+        com.cooptest.neoforge.PlayerActions.teleport(dap, dap.level(), newDap.x, newDap.y, newDap.z, dap.getYRot(), dap.getXRot());
     }
     private static void faceEachOther(ServerPlayer a, ServerPlayer b) {
         Vec3 diff = b.position().subtract(a.position());
         float yawA = (float)(Math.toDegrees(Math.atan2(diff.z, diff.x))) - 90f;
-        a.teleportTo(a.serverLevel(), a.getX(), a.getY(), a.getZ(), yawA,        a.getXRot());
-        b.teleportTo(b.serverLevel(), b.getX(), b.getY(), b.getZ(), yawA + 180f, b.getXRot());
+        com.cooptest.neoforge.PlayerActions.teleport(a, a.level(), a.getX(), a.getY(), a.getZ(), yawA,        a.getXRot());
+        com.cooptest.neoforge.PlayerActions.teleport(b, b.level(), b.getX(), b.getY(), b.getZ(), yawA + 180f, b.getXRot());
     }
     private static void spawnHandStand(ServerPlayer hf, ServerPlayer dap) {
-        ServerLevel world = hf.serverLevel();
+        ServerLevel world = hf.level();
         Vec3 mid = hf.position().add(0, 1.4, 0).add(dap.position().add(0, 1.4, 0)).scale(0.5);
-        ArmorStand stand = new ArmorStand(EntityType.ARMOR_STAND, world);
+        ArmorStand stand = new ArmorStand(net.minecraft.world.entity.EntityTypes.ARMOR_STAND, world);
         stand.setPos(mid.x, mid.y, mid.z);
         stand.setInvisible(true);
         stand.setNoGravity(true);
@@ -571,7 +571,7 @@ public class DapHoldHandler {
         stand.setPos(mid.x, mid.y, mid.z);
     }
     private static void spawnImpactParticles(ServerPlayer hf, ServerPlayer dap, UUID hfId) {
-        ServerLevel world = hf.serverLevel();
+        ServerLevel world = hf.level();
         ArmorStand stand = handStands.get(hfId);
         double x, y, z;
         if (stand != null && !stand.isRemoved()) {
@@ -580,7 +580,7 @@ public class DapHoldHandler {
             Vec3 mid = hf.position().add(dap.position()).scale(0.5).add(0, 1.4, 0);
             x = mid.x; y = mid.y; z = mid.z;
         }
-        world.sendParticles(ParticleTypes.FLASH,     x, y, z, 3,  0,   0,   0,   0);
+        world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF),     x, y, z, 3,  0,   0,   0,   0);
         world.sendParticles(ParticleTypes.END_ROD,   x, y, z, 40, 0.4, 0.4, 0.4, 0.15);
         world.sendParticles(ParticleTypes.WHITE_ASH, x, y, z, 80, 0.6, 0.6, 0.6, 0.08);
         world.sendParticles(ParticleTypes.CLOUD,     x, y, z, 20, 0.3, 0.3, 0.3, 0.05);

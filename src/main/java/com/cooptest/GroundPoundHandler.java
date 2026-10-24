@@ -5,7 +5,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -25,14 +25,14 @@ public class GroundPoundHandler {
     private static final int    ANIM_LAND          = 66;
     public record GroundPoundStartPayload() implements CustomPacketPayload {
         public static final Type<GroundPoundStartPayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("testcoop", "ground_pound_start"));
+                new Type<>(Identifier.fromNamespaceAndPath("testcoop", "ground_pound_start"));
         public static final StreamCodec<FriendlyByteBuf, GroundPoundStartPayload> CODEC =
                 StreamCodec.unit(new GroundPoundStartPayload());
         @Override public Type<GroundPoundStartPayload> type() { return ID; }
     }//gooidnfa crazyfabehfjafsf
     public record GroundPoundSyncPayload(UUID playerId, boolean diving) implements CustomPacketPayload {
         public static final Type<GroundPoundSyncPayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("testcoop", "ground_pound_sync"));
+                new Type<>(Identifier.fromNamespaceAndPath("testcoop", "ground_pound_sync"));
         public static final StreamCodec<FriendlyByteBuf, GroundPoundSyncPayload> CODEC =
                 StreamCodec.ofMember(
                         (val, buf) -> { buf.writeUUID(val.playerId()); buf.writeBoolean(val.diving()); },
@@ -61,7 +61,7 @@ public class GroundPoundHandler {
                 if (GrabMechanic.heldBy.containsKey(id)) return;
                 if (player.onGround() && !SpinHandler.isSpinning(id)) return;
                 if (SpinHandler.isSpinning(id)) {
-                    SpinHandler.stopSpinKeepRider(player.getServer(), id);
+                    SpinHandler.stopSpinKeepRider(player.level().getServer(), id);
                 }
                 diving.add(id);
                 diveStartY.put(id, player.getY());
@@ -69,8 +69,8 @@ public class GroundPoundHandler {
                 player.setDeltaMovement(0, DIVE_SPEED, 0);
                 player.hurtMarked = true;
                 PoseNetworking.broadcastAnimState(player, ANIM_DIVE);
-                broadcastDiveSync(player.getServer(), id, true);
-                player.serverLevel().playSound(null, player.getX(), player.getY(), player.getZ(),
+                broadcastDiveSync(player.level().getServer(), id, true);
+                player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.ENDER_DRAGON_FLAP, SoundSource.PLAYERS, 1.0f, 0.6f);
             });
         });
@@ -109,7 +109,7 @@ public class GroundPoundHandler {
                 cleanupDiveMaps(id);
                 UUID riderId = SpinHandler.pendingGroundPoundRider.remove(id);
                 if (riderId != null) {
-                    SpinHandler.detachRiderByIds(player.getServer(), id, riderId);
+                    SpinHandler.detachRiderByIds(player.level().getServer(), id, riderId);
                 }
                 executeImpact(player, heightFallen);
                 broadcastDiveSync(server, id, false);
@@ -122,7 +122,7 @@ public class GroundPoundHandler {
         }
     }
     private static void executeImpact(ServerPlayer player, double heightFallen) {
-        ServerLevel world = player.serverLevel();
+        ServerLevel world = player.level();
         Vec3 pos = player.position();
         UUID id   = player.getUUID();
         boolean isMega = megaPound.remove(id);
@@ -191,16 +191,16 @@ public class GroundPoundHandler {
         player.setDeltaMovement(0, 0, 0);
         player.hurtMarked = true;
         if (scaledPower >= 0.6) {
-            player.displayClientMessage(net.minecraft.network.chat.Component.literal("§c§l GROUND POUND!"), true);
+            com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal("§c§l GROUND POUND!"), true);
         } else {
-            player.displayClientMessage(net.minecraft.network.chat.Component.literal("§e Ground Pound"), true);
+            com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal("§e Ground Pound"), true);
         }
     }
     private static boolean isCloseToGroundFalling(ServerPlayer player) {
         if (player.getDeltaMovement().y >= 0) return false;
         Vec3 pos = player.position();
         for (int i = 1; i <= 3; i++) {
-            var block = player.serverLevel().getBlockState(
+            var block = player.level().getBlockState(
                     net.minecraft.core.BlockPos.containing(pos.x, pos.y - i * 0.5, pos.z));
             if (!block.isAir()) return true;
         }

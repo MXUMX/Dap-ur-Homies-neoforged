@@ -31,7 +31,7 @@ public class HuddleClientHandler {
                 }
                 return;
             }
-            long win  = client.getWindow().getWindow();
+            long win  = client.getWindow().handle();
             boolean fHeld = org.lwjgl.glfw.GLFW.glfwGetKey(win, org.lwjgl.glfw.GLFW.GLFW_KEY_F)
                     == org.lwjgl.glfw.GLFW.GLFW_PRESS;
             if (fHeld && !fWasHeld) {

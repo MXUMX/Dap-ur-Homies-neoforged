@@ -10,7 +10,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -308,12 +308,12 @@ public class ChargedDapHandler {
 
 
 
-    public static final ResourceLocation CHARGE_START_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "charged_dap_start");
-    public static final ResourceLocation CHARGE_RELEASE_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "charged_dap_release");
-    public static final ResourceLocation CHARGE_SYNC_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "charged_dap_sync");
-    public static final ResourceLocation DAP_RESULT_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "charged_dap_result");
-    public static final ResourceLocation WHIFF_COOLDOWN_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "whiff_cooldown");
-    public static final ResourceLocation IMPACT_FRAME_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "impact_frame");
+    public static final Identifier CHARGE_START_ID = Identifier.fromNamespaceAndPath("cooptest", "charged_dap_start");
+    public static final Identifier CHARGE_RELEASE_ID = Identifier.fromNamespaceAndPath("cooptest", "charged_dap_release");
+    public static final Identifier CHARGE_SYNC_ID = Identifier.fromNamespaceAndPath("cooptest", "charged_dap_sync");
+    public static final Identifier DAP_RESULT_ID = Identifier.fromNamespaceAndPath("cooptest", "charged_dap_result");
+    public static final Identifier WHIFF_COOLDOWN_ID = Identifier.fromNamespaceAndPath("cooptest", "whiff_cooldown");
+    public static final Identifier IMPACT_FRAME_ID = Identifier.fromNamespaceAndPath("cooptest", "impact_frame");
 
     public record ChargeStartPayload() implements CustomPacketPayload {
         public static final Type<ChargeStartPayload> ID = new Type<>(CHARGE_START_ID);
@@ -359,7 +359,7 @@ public class ChargedDapHandler {
     }
 
 
-    public static final ResourceLocation PERFECT_DAP_FREEZE_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "perfect_dap_freeze");
+    public static final Identifier PERFECT_DAP_FREEZE_ID = Identifier.fromNamespaceAndPath("cooptest", "perfect_dap_freeze");
 
     public record PerfectDapFreezePayload(boolean frozen) implements CustomPacketPayload {
         public static final Type<PerfectDapFreezePayload> ID = new Type<>(PERFECT_DAP_FREEZE_ID);
@@ -373,8 +373,8 @@ public class ChargedDapHandler {
     }
 
 
-    public static final ResourceLocation PERFECT_DAP_IMPACT_FRAME_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "perfect_dap_impact_frame");
-    public static final ResourceLocation FACING_DAP_IMPACT_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "facing_dap_impact");
+    public static final Identifier PERFECT_DAP_IMPACT_FRAME_ID = Identifier.fromNamespaceAndPath("cooptest", "perfect_dap_impact_frame");
+    public static final Identifier FACING_DAP_IMPACT_ID = Identifier.fromNamespaceAndPath("cooptest", "facing_dap_impact");
 
     public record FacingDapImpactPayload() implements CustomPacketPayload {
         public static final Type<FacingDapImpactPayload> ID = new Type<>(FACING_DAP_IMPACT_ID);
@@ -395,10 +395,10 @@ public class ChargedDapHandler {
     }
 
 
-    public static final ResourceLocation FIRE_DAP_J_PRESS_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "fire_dap_j_press");
-    public static final ResourceLocation FIRE_DAP_WINDOW_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "fire_dap_window");
-    public static final ResourceLocation FIRE_DAP_FREEZE_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "fire_dap_freeze");
-    public static final ResourceLocation FIRE_DAP_FP_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "fire_dap_fp");
+    public static final Identifier FIRE_DAP_J_PRESS_ID = Identifier.fromNamespaceAndPath("cooptest", "fire_dap_j_press");
+    public static final Identifier FIRE_DAP_WINDOW_ID = Identifier.fromNamespaceAndPath("cooptest", "fire_dap_window");
+    public static final Identifier FIRE_DAP_FREEZE_ID = Identifier.fromNamespaceAndPath("cooptest", "fire_dap_freeze");
+    public static final Identifier FIRE_DAP_FP_ID = Identifier.fromNamespaceAndPath("cooptest", "fire_dap_fp");
 
     public record FireDapJPressPayload() implements CustomPacketPayload {
         public static final Type<FireDapJPressPayload> ID = new Type<>(FIRE_DAP_J_PRESS_ID);
@@ -448,7 +448,7 @@ public class ChargedDapHandler {
 
 
     public record HeavenReadyPayload(UUID playerId, boolean ready) implements CustomPacketPayload {
-        public static final Type<HeavenReadyPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "heaven_ready"));
+        public static final Type<HeavenReadyPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("cooptest", "heaven_ready"));
         public static final StreamCodec<FriendlyByteBuf, HeavenReadyPayload> CODEC = StreamCodec.ofMember(
                 (payload, buf) -> {
                     buf.writeUUID(payload.playerId);
@@ -600,7 +600,7 @@ public class ChargedDapHandler {
 
         net.fabricmc.fabric.api.event.player.UseEntityCallback.EVENT.register(
                 (player, world, hand, entity, hitResult) -> {
-                    if (world.isClientSide) return net.minecraft.world.InteractionResult.PASS;
+                    if (world.isClientSide()) return net.minecraft.world.InteractionResult.PASS;
                     if (!(player instanceof ServerPlayer sp)) return net.minecraft.world.InteractionResult.PASS;
                     if (!(entity instanceof ServerPlayer target)) return net.minecraft.world.InteractionResult.PASS;
                     if (sp.isShiftKeyDown()) return net.minecraft.world.InteractionResult.PASS;
@@ -753,7 +753,7 @@ public class ChargedDapHandler {
                 world.sendParticles(ParticleTypes.EXPLOSION_EMITTER, pos.x, pos.y, pos.z, 2, 3, 3, 3, 0);
                 world.sendParticles(ParticleTypes.FIREWORK, pos.x, pos.y, pos.z, 10, 5, 5, 5, 0.3);
                 world.sendParticles(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 5, 4, 4, 4, 0.2);
-                world.sendParticles(ParticleTypes.FLASH, pos.x, pos.y, pos.z, 1, 0, 0, 0, 0);
+                world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF), pos.x, pos.y, pos.z, 1, 0, 0, 0, 0);
             }
 
 
@@ -801,7 +801,7 @@ public class ChargedDapHandler {
 
 
                 if (elapsed >= 150 && elapsed <= 1330 && partner != null) {
-                    ServerLevel world = player.serverLevel();
+                    ServerLevel world = player.level();
 
 
                     Vec3 particlePos;
@@ -901,7 +901,7 @@ public class ChargedDapHandler {
 
 
                 if (elapsed >= 9500 && elapsed < 9600) {
-                    player.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 40, 0, false, false));
+                    player.addEffect(new MobEffectInstance(MobEffects.NAUSEA, 40, 0, false, false));
                 }
 
 
@@ -919,7 +919,7 @@ public class ChargedDapHandler {
                         float yawAwayFromPartner = yawTowardsPartner + 180;
 
 
-                        player.teleportTo(data.world, returnPos.x, returnPos.y, returnPos.z, yawAwayFromPartner, 0);
+                        com.cooptest.neoforge.PlayerActions.teleport(player, data.world, returnPos.x, returnPos.y, returnPos.z, yawAwayFromPartner, 0);
 
 
                         player.stopFallFlying();
@@ -931,16 +931,16 @@ public class ChargedDapHandler {
                         PoseNetworking.broadcastAnimState(player, 0);
 
 
-                        player.removeEffect(MobEffects.CONFUSION);
+                        player.removeEffect(MobEffects.NAUSEA);
 
 
 
                         if (partner != null && heavenPlayers.containsKey(partnerId)) {
 
                             player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                                    net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE, 80, 255, false, false));
+                                    net.minecraft.world.effect.MobEffects.RESISTANCE, 80, 255, false, false));
                             partner.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                                    net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE, 80, 255, false, false));
+                                    net.minecraft.world.effect.MobEffects.RESISTANCE, 80, 255, false, false));
                             final ServerLevel _rw = data.world;
                             final Vec3 _rp = returnPos;
                             for (int i = 0; i < 8; i++) {
@@ -995,7 +995,7 @@ public class ChargedDapHandler {
                         }
 
 
-                        data.world.sendParticles(ParticleTypes.FLASH,
+                        data.world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF),
                                 returnPos.x, returnPos.y + 1, returnPos.z,
                                 5, 0.5, 0.5, 0.5, 0);
                         data.world.sendParticles(ParticleTypes.EXPLOSION_EMITTER,
@@ -1007,7 +1007,7 @@ public class ChargedDapHandler {
                         new Thread(() -> {
                             try {
                                 Thread.sleep(3000);
-                                finalPlayer.getServer().execute(() -> {
+                                finalPlayer.level().getServer().execute(() -> {
 
                                     ServerPlayNetworking.send(finalPlayer, new HeavenDapPayloads.RestoreVolumePayload());
                                 });
@@ -1022,7 +1022,7 @@ public class ChargedDapHandler {
                         if (partner != null && heavenPlayers.containsKey(partnerId)) {
 
                             for (ServerPlayer p : server.getPlayerList().getPlayers()) {
-                                p.displayClientMessage(net.minecraft.network.chat.Component.literal(
+                                com.cooptest.neoforge.PlayerActions.message(p, net.minecraft.network.chat.Component.literal(
                                         "§d§l✨ " + player.getName().getString() + " §7and §d§l" +
                                                 partner.getName().getString() + " §7have achieved §d§lPERFECT FRIENDSHIP! ✨"
                                 ), false);
@@ -1124,9 +1124,9 @@ public class ChargedDapHandler {
                                 ServerPlayer partner = server.getPlayerList().getPlayer(partnerId);
                                 if (partner != null) {
 
-                                    partner.displayClientMessage(net.minecraft.network.chat.Component.literal("§c✗ You missed the combo! " + player.getName().getString() + " pressed J!"), true);
+                                    com.cooptest.neoforge.PlayerActions.message(partner, net.minecraft.network.chat.Component.literal("§c✗ You missed the combo! " + player.getName().getString() + " pressed J!"), true);
 
-                                    player.displayClientMessage(net.minecraft.network.chat.Component.literal("§c✗ " + partner.getName().getString() + " missed the combo!"), true);
+                                    com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal("§c✗ " + partner.getName().getString() + " missed the combo!"), true);
                                 }
                             }
 
@@ -1245,7 +1245,7 @@ public class ChargedDapHandler {
                             double dz = partner.position().z - newPos.z;
                             float yaw = (float) (Math.atan2(dz, dx) * 180 / Math.PI) - 90;
 
-                            player.teleportTo(player.serverLevel(), newPos.x, newPos.y, newPos.z, yaw, player.getXRot());
+                            com.cooptest.neoforge.PlayerActions.teleport(player, player.level(), newPos.x, newPos.y, newPos.z, yaw, player.getXRot());
                         }
                     }
 
@@ -1471,11 +1471,11 @@ public class ChargedDapHandler {
                                             heavenReady.add(id);
 
 
-                                            player.serverLevel().playSound(null, player.getX(), player.getY(), player.getZ(),
+                                            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                                                     net.minecraft.sounds.SoundEvents.GLASS_BREAK, net.minecraft.sounds.SoundSource.PLAYERS,
                                                     1.0f, 0.8f);
 
-                                            player.displayClientMessage(net.minecraft.network.chat.Component.literal("§d§l✨ HEAVEN READY! ✨ §7(Fire UI broken!)"), true);
+                                            com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal("§d§l✨ HEAVEN READY! ✨ §7(Fire UI broken!)"), true);
 
 
                                             HeavenReadyPayload payload = new HeavenReadyPayload(id, true);
@@ -1581,7 +1581,7 @@ public class ChargedDapHandler {
 
         if (Math.random() > 0.33) return;
 
-        ServerLevel world = player.serverLevel();
+        ServerLevel world = player.level();
         Vec3 pos = player.position();
 
 
@@ -1623,7 +1623,7 @@ public class ChargedDapHandler {
 
 
         if (isInComboCooldown(uuid)) {
-            player.displayClientMessage(net.minecraft.network.chat.Component.literal("§cWait 1 second after combo!"), true);
+            com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal("§cWait 1 second after combo!"), true);
             broadcastChargeCancel(player);
             return;
         }
@@ -1648,7 +1648,7 @@ public class ChargedDapHandler {
             ServerPlayNetworking.send(other, payload);
         }
 
-        player.serverLevel().playSound(null, player.getX(), player.getY(), player.getZ(),
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.5f, 0.8f);
     }
 
@@ -1667,7 +1667,7 @@ public class ChargedDapHandler {
             boolean partnerAlsoCharging = chargeStartTime.keySet().stream()
                     .filter(uid -> !uid.equals(uuid))
                     .anyMatch(uid -> {
-                        ServerPlayer nearby = player.serverLevel().players().stream()
+                        ServerPlayer nearby = player.level().players().stream()
                                 .filter(p -> p.getUUID().equals(uid)
                                         && player.distanceTo(p) < 2.5f).findFirst().orElse(null);
                         return nearby != null;
@@ -1676,7 +1676,7 @@ public class ChargedDapHandler {
                 chargeStartTime.remove(uuid);
                 fireLevel.remove(uuid);
                 fireStartTime.remove(uuid);
-                if (heavenReady.remove(uuid)) broadcastHeavenReadyStatus(player.getServer(), uuid, false);
+                if (heavenReady.remove(uuid)) broadcastHeavenReadyStatus(player.level().getServer(), uuid, false);
                 broadcastChargeCancel(player);
                 return;
             }
@@ -1698,7 +1698,7 @@ public class ChargedDapHandler {
                     for (ServerPlayer tp : new ServerPlayer[]{player, tp2, tp3}) {
                         UUID tid = tp.getUUID();
                         chargeStartTime.remove(tid); fireLevel.remove(tid); fireStartTime.remove(tid);
-                        if (heavenReady.remove(tid)) broadcastHeavenReadyStatus(tp.getServer(), tid, false);
+                        if (heavenReady.remove(tid)) broadcastHeavenReadyStatus(tp.level().getServer(), tid, false);
                         broadcastChargeCancel(tp);
                     }
                     return;
@@ -1717,7 +1717,7 @@ public class ChargedDapHandler {
 
 
             if (heavenReady.remove(uuid)) {
-                broadcastHeavenReadyStatus(player.getServer(), uuid, false);
+                broadcastHeavenReadyStatus(player.level().getServer(), uuid, false);
             }
 
 
@@ -1729,7 +1729,7 @@ public class ChargedDapHandler {
 
             broadcastWhiffCooldown(player, cooldownEnd);
 
-            player.displayClientMessage(net.minecraft.network.chat.Component.literal("§c✗ Whiff! 0.8s cooldown"), true);
+            com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal("§c✗ Whiff! 0.8s cooldown"), true);
             return;
         }
 
@@ -1746,7 +1746,7 @@ public class ChargedDapHandler {
 
 
                 if (heavenReady.remove(uuid)) {
-                    broadcastHeavenReadyStatus(player.getServer(), uuid, false);
+                    broadcastHeavenReadyStatus(player.level().getServer(), uuid, false);
                 }
 
                 broadcastChargeCancel(player);
@@ -1772,7 +1772,7 @@ public class ChargedDapHandler {
 
 
             if (heavenReady.remove(uuid)) {
-                broadcastHeavenReadyStatus(player.getServer(), uuid, false);
+                broadcastHeavenReadyStatus(player.level().getServer(), uuid, false);
             }
 
             broadcastChargeCancel(player);
@@ -1798,10 +1798,10 @@ public class ChargedDapHandler {
 
 
             if (heavenReady.remove(uuid)) {
-                broadcastHeavenReadyStatus(player.getServer(), uuid, false);
+                broadcastHeavenReadyStatus(player.level().getServer(), uuid, false);
             }
             if (heavenReady.remove(partnerId)) {
-                broadcastHeavenReadyStatus(partner.getServer(), partnerId, false);
+                broadcastHeavenReadyStatus(partner.level().getServer(), partnerId, false);
             }
 
             broadcastChargeCancel(player);
@@ -1811,7 +1811,7 @@ public class ChargedDapHandler {
             releaseTime.put(uuid, now);
             waitingForPartner.put(uuid, partnerId);
 
-            player.serverLevel().playSound(null, player.getX(), player.getY(), player.getZ(),
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.NOTE_BLOCK_CHIME.value(), SoundSource.PLAYERS, 0.7f, 1.2f);
         }
     }
@@ -1820,7 +1820,7 @@ public class ChargedDapHandler {
         AABB searchBox = player.getBoundingBox().inflate(DAP_RANGE);
         Vec3 look = player.getViewVector(1.0f);
 
-        for (ServerPlayer other : player.serverLevel().players()) {
+        for (ServerPlayer other : player.level().players()) {
             if (other == player) continue;
             if (isOnCooldown(other.getUUID())) continue;
 
@@ -1843,7 +1843,7 @@ public class ChargedDapHandler {
     private static java.util.List<ServerPlayer> findAllDapPartners(ServerPlayer player) {
         AABB searchBox = player.getBoundingBox().inflate(DAP_RANGE);
         java.util.List<ServerPlayer> result = new java.util.ArrayList<>();
-        for (ServerPlayer other : player.serverLevel().players()) {
+        for (ServerPlayer other : player.level().players()) {
             if (other == player) continue;
             if (isOnCooldown(other.getUUID())) continue;
             if (!chargeStartTime.containsKey(other.getUUID())) continue;
@@ -1854,7 +1854,7 @@ public class ChargedDapHandler {
     }
 
     private static void executeTripleDap(ServerPlayer p1, ServerPlayer p2, ServerPlayer p3) {
-        ServerLevel world = p1.serverLevel();
+        ServerLevel world = p1.level();
         long now = System.currentTimeMillis();
 
 
@@ -1874,7 +1874,7 @@ public class ChargedDapHandler {
             double pz = center.z + radius * Math.sin(angle);
 
             float yaw = (float)(-Math.toDegrees(Math.atan2(center.x - px, center.z - pz)));
-            trio[i].teleportTo(world, px, p1.getY(), pz, java.util.Set.of(), yaw, 0);
+            com.cooptest.neoforge.PlayerActions.teleport(trio[i], world, px, p1.getY(), pz, java.util.Set.of(), yaw, 0);
             trio[i].setYRot(yaw); trio[i].setYBodyRot(yaw); trio[i].setYHeadRot(yaw);
             trio[i].yBodyRotO = yaw;
             trio[i].swing(net.minecraft.world.InteractionHand.MAIN_HAND);
@@ -1896,7 +1896,7 @@ public class ChargedDapHandler {
         Vec3 cTop = center.add(0, 1.4, 0);
         world.sendParticles(net.minecraft.core.particles.ParticleTypes.END_ROD,
                 cTop.x, cTop.y, cTop.z, 40, 0.4, 0.4, 0.4, 0.15);
-        world.sendParticles(net.minecraft.core.particles.ParticleTypes.FLASH,
+        world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF),
                 cTop.x, cTop.y, cTop.z, 3, 0.1, 0.1, 0.1, 0);
         world.sendParticles(net.minecraft.core.particles.ParticleTypes.TOTEM_OF_UNDYING,
                 cTop.x, cTop.y, cTop.z, 15, 0.5, 0.5, 0.5, 0.2);
@@ -1905,7 +1905,7 @@ public class ChargedDapHandler {
                 ModSounds.EPIC_DAP, net.minecraft.sounds.SoundSource.PLAYERS, 1.3f, 1.1f);
 
         net.minecraft.network.chat.Component msg = net.minecraft.network.chat.Component.literal("§6§l⚡ TRIPLE DAP!");
-        for (ServerPlayer p : trio) p.displayClientMessage(msg, true);
+        for (ServerPlayer p : trio) com.cooptest.neoforge.PlayerActions.message(p, msg, true);
     }
 
     private static void executeDap(ServerPlayer p1, ServerPlayer p2,
@@ -1956,8 +1956,8 @@ public class ChargedDapHandler {
         boolean isHighTierDap = (tier >= 4);
         if (!isPerfectDap && !isHighTierDap) {
             if (!arePlayersFacingEachOther(p1, p2)) {
-                p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§c§lKeep eye contact!"), true);
-                p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§c§lKeep eye contact!"), true);
+                com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§c§lKeep eye contact!"), true);
+                com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§c§lKeep eye contact!"), true);
                 cooldowns.put(p1.getUUID(), now + 300);
                 cooldowns.put(p2.getUUID(), now + 300);
 
@@ -1973,7 +1973,7 @@ public class ChargedDapHandler {
         Vec3 pos2 = p2.position();
         Vec3 dapPos = pos1.add(pos2).scale(0.5).add(0, 0.5, 0);
 
-        ServerLevel world = p1.serverLevel();
+        ServerLevel world = p1.level();
 
 
 
@@ -2048,7 +2048,7 @@ public class ChargedDapHandler {
                 dapPos.x, dapPos.y, dapPos.z,
                 p1.getUUID(), p2.getUUID(), tier, perfectHit
         );
-        for (ServerPlayer other : PlayerLookup.all(p1.getServer())) {
+        for (ServerPlayer other : PlayerLookup.all(p1.level().getServer())) {
             ServerPlayNetworking.send(other, result);
         }
     }
@@ -2080,7 +2080,7 @@ public class ChargedDapHandler {
     }
 
     private static void executeFizzle(ServerPlayer p1, ServerPlayer p2) {
-        ServerLevel world = p1.serverLevel();
+        ServerLevel world = p1.level();
         Vec3 pos = p1.position().add(p2.position()).scale(0.5).add(0, 1.4, 0);
 
 
@@ -2093,8 +2093,8 @@ public class ChargedDapHandler {
         world.sendParticles(ParticleTypes.POOF, pos.x, pos.y, pos.z, 12, 0.4, 0.3, 0.4, 0.03);
         world.sendParticles(ParticleTypes.SMOKE, pos.x, pos.y, pos.z, 8, 0.3, 0.3, 0.3, 0.02);
 
-        p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§7*missed!* timing off..."), true);
-        p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§7*missed!* timing off..."), true);
+        com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§7*missed!* timing off..."), true);
+        com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§7*missed!* timing off..."), true);
 
         chargeStartTime.remove(p1.getUUID());
         chargeStartTime.remove(p2.getUUID());
@@ -2103,10 +2103,10 @@ public class ChargedDapHandler {
 
 
         if (heavenReady.remove(p1.getUUID())) {
-            broadcastHeavenReadyStatus(p1.getServer(), p1.getUUID(), false);
+            broadcastHeavenReadyStatus(p1.level().getServer(), p1.getUUID(), false);
         }
         if (heavenReady.remove(p2.getUUID())) {
-            broadcastHeavenReadyStatus(p2.getServer(), p2.getUUID(), false);
+            broadcastHeavenReadyStatus(p2.level().getServer(), p2.getUUID(), false);
         }
 
         broadcastChargeCancel(p1);
@@ -2119,7 +2119,7 @@ public class ChargedDapHandler {
 
         UUID p1Id = p1.getUUID();
         UUID p2Id = p2.getUUID();
-        for (ServerPlayer p : p1.getServer().getPlayerList().getPlayers()) {
+        for (ServerPlayer p : p1.level().getServer().getPlayerList().getPlayers()) {
             ServerPlayNetworking.send(p, new FireDapFirstPersonPayload(p1Id, false));
             ServerPlayNetworking.send(p, new FireDapFirstPersonPayload(p2Id, false));
         }
@@ -2131,7 +2131,7 @@ public class ChargedDapHandler {
     }
 
     public static void executeWhiff(ServerPlayer player) {
-        ServerLevel world = player.serverLevel();
+        ServerLevel world = player.level();
 
 
         Vec3 pos = player.position().add(0, 1.4, 0);
@@ -2161,12 +2161,12 @@ public class ChargedDapHandler {
 
 
         UUID playerId = player.getUUID();
-        for (ServerPlayer p : player.getServer().getPlayerList().getPlayers()) {
+        for (ServerPlayer p : player.level().getServer().getPlayerList().getPlayers()) {
             ServerPlayNetworking.send(p, new FireDapFirstPersonPayload(playerId, false));
         }
 
 
-        player.displayClientMessage(net.minecraft.network.chat.Component.literal("§7*whoosh*"), true);
+        com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal("§7*whoosh*"), true);
     }
 
 
@@ -2186,8 +2186,8 @@ public class ChargedDapHandler {
             world.playSound(null, pos.x, pos.y, pos.z,
                     ModSounds.DAP_WEAK, SoundSource.PLAYERS, 1.0f, 1.0f);
             spawnPrecisionDapParticles(world, pos, 0);
-            p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§7Weak dap..."), true);
-            p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§7Weak dap..."), true);
+            com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§7Weak dap..."), true);
+            com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§7Weak dap..."), true);
             return;
         }
 
@@ -2232,8 +2232,8 @@ public class ChargedDapHandler {
             world.playSound(null, pos.x, pos.y, pos.z,
                     ModSounds.DAP_WEAK, SoundSource.PLAYERS, 1.0f, 1.0f);
             spawnPrecisionDapParticles(world, pos, 1);
-            p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§e✋ Decent Dap!"), true);
-            p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§e✋ Decent Dap!"), true);
+            com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§e✋ Decent Dap!"), true);
+            com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§e✋ Decent Dap!"), true);
             return;
         }
 
@@ -2277,8 +2277,8 @@ public class ChargedDapHandler {
             world.playSound(null, pos.x, pos.y, pos.z,
                     ModSounds.DAP_WEAK, SoundSource.PLAYERS, 1.0f, 1.0f);
             spawnPrecisionDapParticles(world, pos, 2);
-            p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§a✋ Good Dap! ✋"), true);
-            p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§a✋ Good Dap! ✋"), true);
+            com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§a✋ Good Dap! ✋"), true);
+            com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§a✋ Good Dap! ✋"), true);
             return;
         }
 
@@ -2403,8 +2403,8 @@ public class ChargedDapHandler {
                 world, pos, p1, p2, effectTime
         ));
 
-        p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§6§l✋ PERFECT GREAT DAP! ✋"), true);
-        p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§6§l✋ PERFECT GREAT DAP! ✋"), true);
+        com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§6§l✋ PERFECT GREAT DAP! ✋"), true);
+        com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§6§l✋ PERFECT GREAT DAP! ✋"), true);
 
 
         DapSessionManager.removeSession(id1);
@@ -2427,11 +2427,11 @@ public class ChargedDapHandler {
             world.playSound(null, pos.x, pos.y, pos.z,
                     ModSounds.DAP_WEAK, SoundSource.PLAYERS, 1.0f, 1.0f);
             spawnPrecisionDapParticles(world, pos, 3);
-            world.sendParticles(ParticleTypes.FLASH, pos.x, pos.y, pos.z, 1, 0, 0, 0, 0);
+            world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF), pos.x, pos.y, pos.z, 1, 0, 0, 0, 0);
             createExplosion(world, pos, p1, p2, 3.5, 6.0f);
             applyKnockback(p1, p2, pos, 1.0);
-            p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§6§l✋ GREAT DAP! ✋"), true);
-            p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§6§l✋ GREAT DAP! ✋"), true);
+            com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§6§l✋ GREAT DAP! ✋"), true);
+            com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§6§l✋ GREAT DAP! ✋"), true);
             return;
         }
 
@@ -2441,11 +2441,11 @@ public class ChargedDapHandler {
                     ModSounds.DAP_WEAK, SoundSource.PLAYERS, 1.0f, 1.0f);
 
             spawnPrecisionDapParticles(world, pos, 3);
-            world.sendParticles(ParticleTypes.FLASH, pos.x, pos.y, pos.z, 1, 0, 0, 0, 0);
+            world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF), pos.x, pos.y, pos.z, 1, 0, 0, 0, 0);
             createExplosion(world, pos, p1, p2, 3.5, 6.0f);
             applyKnockback(p1, p2, pos, 1.0);
-            p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§6§l✋ GREAT DAP! ✋"), true);
-            p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§6§l✋ GREAT DAP! ✋"), true);
+            com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§6§l✋ GREAT DAP! ✋"), true);
+            com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§6§l✋ GREAT DAP! ✋"), true);
 
 
             if (CoopMovesConfig.get().enableDapCombo) DapComboChain.startCombo(p1, p2, pos);
@@ -2455,7 +2455,7 @@ public class ChargedDapHandler {
     private static void startStage2Extender(ServerPlayer p1, ServerPlayer p2) {
         UUID id1 = p1.getUUID();
         UUID id2 = p2.getUUID();
-        ServerLevel world = p1.serverLevel();
+        ServerLevel world = p1.level();
         long now = System.currentTimeMillis();
 
 
@@ -2480,8 +2480,8 @@ public class ChargedDapHandler {
         PoseNetworking.broadcastAnimState(p2,
                 com.cooptest.client.CoopAnimationHandler.AnimState.PERFECT_DAP_EXTEND1_P2.ordinal());
 
-        p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§d§l★ EXTENDER DAP! ★"), true);
-        p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§d§l★ EXTENDER DAP! ★"), true);
+        com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§d§l★ EXTENDER DAP! ★"), true);
+        com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§d§l★ EXTENDER DAP! ★"), true);
 
 
 
@@ -2555,9 +2555,9 @@ public class ChargedDapHandler {
 
 
                         p1.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                                net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE, 80, 255, false, false));
+                                net.minecraft.world.effect.MobEffects.RESISTANCE, 80, 255, false, false));
                         p2.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                                net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE, 80, 255, false, false));
+                                net.minecraft.world.effect.MobEffects.RESISTANCE, 80, 255, false, false));
                         boolean _d = !CoopMovesConfig.get().noGriefMode;
                         for (int i = 0; i < 8; i++) {
                             double a = Math.toRadians(i * 45.0);
@@ -2620,7 +2620,7 @@ public class ChargedDapHandler {
                         world.sendParticles(ParticleTypes.EXPLOSION_EMITTER, pos.x, pos.y, pos.z, 20, 5, 5, 5, 0);
                         world.sendParticles(ParticleTypes.FIREWORK, pos.x, pos.y, pos.z, 300, 10, 10, 10, 0.5);
                         world.sendParticles(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 200, 8, 8, 8, 0.4);
-                        world.sendParticles(ParticleTypes.FLASH, pos.x, pos.y, pos.z, 10, 0, 0, 0, 0);
+                        world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF), pos.x, pos.y, pos.z, 10, 0, 0, 0, 0);
 
 
                         spawnStarBurst(world, pos, 100, 5.0);
@@ -2671,12 +2671,12 @@ public class ChargedDapHandler {
             p1.die(world.damageSources().magic());
             p2.die(world.damageSources().magic());
 
-            p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§4§l☠ THE POWER WAS TOO GREAT! ☠"), true);
-            p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§4§l☠ THE POWER WAS TOO GREAT! ☠"), true);
+            com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§4§l☠ THE POWER WAS TOO GREAT! ☠"), true);
+            com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§4§l☠ THE POWER WAS TOO GREAT! ☠"), true);
 
 
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                player.displayClientMessage(net.minecraft.network.chat.Component.literal(
+                com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal(
                         "§4§l☠ " + p1.getName().getString() + " §7and §4" + p2.getName().getString() +
                                 " §7failed to achieve Perfect Friendship... §c§lTHEY PERISHED!"
                 ), false);
@@ -2701,8 +2701,8 @@ public class ChargedDapHandler {
 
             applyKnockback(p1, p2, pos, 2.0);
 
-            p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§d§l⚡ LEGENDARY DAP! ⚡"), true);
-            p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§d§l⚡ LEGENDARY DAP! ⚡"), true);
+            com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§d§l⚡ LEGENDARY DAP! ⚡"), true);
+            com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§d§l⚡ LEGENDARY DAP! ⚡"), true);
         }
     }
 
@@ -2731,7 +2731,7 @@ public class ChargedDapHandler {
 
 
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                player.displayClientMessage(net.minecraft.network.chat.Component.literal("§7Time returns to normal..."), false);
+                com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal("§7Time returns to normal..."), false);
             }
         }
 
@@ -2763,7 +2763,7 @@ public class ChargedDapHandler {
 
 
                     for (ServerPlayer p : server.getPlayerList().getPlayers()) {
-                        p.displayClientMessage(net.minecraft.network.chat.Component.literal(
+                        com.cooptest.neoforge.PlayerActions.message(p, net.minecraft.network.chat.Component.literal(
                                 "§d§l✨ " + player.getName().getString() + " §7and §d§l" + partner.getName().getString() +
                                         " §7have achieved §b§lPERFECT FRIENDSHIP§7! §d§l✨"
                         ), false);
@@ -2829,9 +2829,9 @@ public class ChargedDapHandler {
 
 
         p1.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE, 80, 255, false, false));
+                net.minecraft.world.effect.MobEffects.RESISTANCE, 80, 255, false, false));
         p2.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE, 80, 255, false, false));
+                net.minecraft.world.effect.MobEffects.RESISTANCE, 80, 255, false, false));
 
 
         for (int i = 0; i < 8; i++) {
@@ -2891,7 +2891,7 @@ public class ChargedDapHandler {
         spawnSonicBoomCircles(world, midpoint);
 
 
-        world.sendParticles(ParticleTypes.FLASH, midpoint.x, midpoint.y, midpoint.z, 5, 0, 0, 0, 0);
+        world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF), midpoint.x, midpoint.y, midpoint.z, 5, 0, 0, 0, 0);
         world.sendParticles(ParticleTypes.EXPLOSION_EMITTER, midpoint.x, midpoint.y, midpoint.z, 3, 0.5, 0.5, 0.5, 0);
         world.sendParticles(ParticleTypes.END_ROD, midpoint.x, midpoint.y, midpoint.z, 50, 1.0, 1.0, 1.0, 0.3);
         world.sendParticles(ParticleTypes.ELECTRIC_SPARK, midpoint.x, midpoint.y, midpoint.z, 40, 0.8, 0.8, 0.8, 0.2);
@@ -2907,7 +2907,7 @@ public class ChargedDapHandler {
             try {
                 Thread.sleep(700);
 
-                p1.getServer().execute(() -> {
+                p1.level().getServer().execute(() -> {
                     if (p1.isRemoved() || p2.isRemoved()) return;
 
 
@@ -2929,8 +2929,8 @@ public class ChargedDapHandler {
                     float yaw2 = yaw1 + 180;
 
 
-                    p1.teleportTo(world, pos1.x, pos1.y, pos1.z, yaw1, 0);
-                    p2.teleportTo(world, pos2.x, pos2.y, pos2.z, yaw2, 0);
+                    com.cooptest.neoforge.PlayerActions.teleport(p1, world, pos1.x, pos1.y, pos1.z, yaw1, 0);
+                    com.cooptest.neoforge.PlayerActions.teleport(p2, world, pos2.x, pos2.y, pos2.z, yaw2, 0);
 
 
                     p1.stopFallFlying();
@@ -2955,8 +2955,8 @@ public class ChargedDapHandler {
                     p2.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 400, 0, false, false));
 
 
-                    p1.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 40, 0, false, false));
-                    p2.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 40, 0, false, false));
+                    p1.addEffect(new MobEffectInstance(MobEffects.NAUSEA, 40, 0, false, false));
+                    p2.addEffect(new MobEffectInstance(MobEffects.NAUSEA, 40, 0, false, false));
 
 
                     ServerPlayNetworking.send(p1, new HeavenDapPayloads.HeavenDapStartPayload());
@@ -3234,7 +3234,7 @@ public class ChargedDapHandler {
         world.sendParticles(ParticleTypes.FLAME, pos.x, pos.y + 1.0, pos.z, 30, 0.3, 0.3, 0.3, 0.2);
         world.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, pos.x, pos.y + 1.0, pos.z, 15, 0.2, 0.2, 0.2, 0.15);
         world.sendParticles(ParticleTypes.LAVA, pos.x, pos.y + 1.0, pos.z, 8, 0.3, 0.3, 0.3, 0);
-        world.sendParticles(ParticleTypes.FLASH, pos.x, pos.y + 1.0, pos.z, 3, 0, 0, 0, 0);
+        world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF), pos.x, pos.y + 1.0, pos.z, 3, 0, 0, 0, 0);
         world.sendParticles(ParticleTypes.END_ROD, pos.x, pos.y + 1.0, pos.z, 20, 0.5, 0.5, 0.5, 0.15);
         world.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, pos.x, pos.y + 1.0, pos.z, 25, 0.5, 0.5, 0.5, 0.3);
 
@@ -3255,15 +3255,15 @@ public class ChargedDapHandler {
 
 
 
-            world.sendParticles(ParticleTypes.DRAGON_BREATH, pos.x, pos.y, pos.z, 40, 0.8, 0.8, 0.8, 0.15);
+            world.sendParticles(net.minecraft.core.particles.PowerParticleOption.create(ParticleTypes.DRAGON_BREATH, 1.0f), pos.x, pos.y, pos.z, 40, 0.8, 0.8, 0.8, 0.15);
             world.sendParticles(ParticleTypes.ELECTRIC_SPARK, pos.x, pos.y, pos.z, 50, 0.6, 0.6, 0.6, 0.3);
 
-            p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§c§l🔥 PERFECT FIRE DAP! 🔥"), true);
-            p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§c§l🔥 PERFECT FIRE DAP! 🔥"), true);
+            com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§c§l🔥 PERFECT FIRE DAP! 🔥"), true);
+            com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§c§l🔥 PERFECT FIRE DAP! 🔥"), true);
         } else {
 
-            p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§c§l🔥 FIRE DAP! 🔥"), true);
-            p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§c§l🔥 FIRE DAP! 🔥"), true);
+            com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§c§l🔥 FIRE DAP! 🔥"), true);
+            com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§c§l🔥 FIRE DAP! 🔥"), true);
         }
 
 
@@ -3274,10 +3274,10 @@ public class ChargedDapHandler {
 
         new Thread(() -> {
             try { Thread.sleep(FUSION_G_WINDOW_START_MS); } catch (InterruptedException ignored) {}
-            p1.getServer().execute(() -> {
+            p1.level().getServer().execute(() -> {
                 if (inFireDapHit.getOrDefault(p1.getUUID(), false)) {
-                    p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§6Press §lG §r§6to FUSE  §7|  §cPress §lJ §r§cfor Fire Combo"), true);
-                    p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§6Press §lG §r§6to FUSE  §7|  §cPress §lJ §r§cfor Fire Combo"), true);
+                    com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§6Press §lG §r§6to FUSE  §7|  §cPress §lJ §r§cfor Fire Combo"), true);
+                    com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§6Press §lG §r§6to FUSE  §7|  §cPress §lJ §r§cfor Fire Combo"), true);
                 }
             });
         }).start();
@@ -3286,7 +3286,7 @@ public class ChargedDapHandler {
         for (ServerPlayer nearby : PlayerLookup.around(world, pos, 50)) {
             if (nearby != p1 && nearby != p2) {
                 String prefix = perfectHit ? "§c§lPERFECT " : "§c§l";
-                nearby.displayClientMessage(net.minecraft.network.chat.Component.literal(
+                com.cooptest.neoforge.PlayerActions.message(nearby, net.minecraft.network.chat.Component.literal(
                         prefix + "🔥 " + p1.getName().getString() + " §7and §c" + p2.getName().getString() +
                                 " §7unleashed a §c§lFIRE DAP§7!"
                 ), false);
@@ -3299,8 +3299,8 @@ public class ChargedDapHandler {
 
     private static void spawnPrecisionDapParticles(ServerLevel world, Vec3 pos, int tier) {
 
-        ArmorStand stand = new ArmorStand(EntityType.ARMOR_STAND, world);
-        stand.moveTo(pos.x, pos.y, pos.z, 0.0f, 0.0f);
+        ArmorStand stand = new ArmorStand(net.minecraft.world.entity.EntityTypes.ARMOR_STAND, world);
+        stand.snapTo(pos.x, pos.y, pos.z, 0.0f, 0.0f);
         stand.setInvisible(true);
         stand.setNoGravity(true);
         stand.setInvulnerable(true);
@@ -3382,13 +3382,13 @@ public class ChargedDapHandler {
                 final int step = i;
                 try {
                     Thread.sleep(delayPerStep);
-                    player.getServer().execute(() -> {
+                    player.level().getServer().execute(() -> {
                         float progress = (float) step / steps;
                         float newYaw = finalCurrentYaw + (finalDiff * progress);
                         player.setYRot(newYaw);
 
                         player.connection.send(
-                                new net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket(player)
+                                net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket.teleport(player.getId(), net.minecraft.world.entity.PositionMoveRotation.of(player), java.util.Set.of(), player.onGround())
                         );
                     });
                 } catch (InterruptedException e) { break; }
@@ -3641,7 +3641,7 @@ public class ChargedDapHandler {
         NormalFacingDapHandler.clearConfirm(player.getUUID(), null);
         if (player == null) return;
         ChargeSyncPayload payload = new ChargeSyncPayload(player.getUUID(), 0f, 0f, false);
-        for (ServerPlayer other : PlayerLookup.all(player.getServer())) {
+        for (ServerPlayer other : PlayerLookup.all(player.level().getServer())) {
             ServerPlayNetworking.send(other, payload);
         }
 
@@ -3665,7 +3665,7 @@ public class ChargedDapHandler {
 
 
         if (p1 != null) {
-            for (ServerPlayer nearby : PlayerLookup.around(p1.serverLevel(), p1.position(), 20)) {
+            for (ServerPlayer nearby : PlayerLookup.around(p1.level(), p1.position(), 20)) {
                 if (nearby != p1 && nearby != p2) {
                     ServerPlayNetworking.send(nearby, payload);
                 }
@@ -3907,7 +3907,7 @@ public class ChargedDapHandler {
     private static void startFireDapAnimation(ServerPlayer p1, ServerPlayer p2, Vec3 midpoint) {
         UUID id1 = p1.getUUID();
         UUID id2 = p2.getUUID();
-        ServerLevel world = p1.serverLevel();
+        ServerLevel world = p1.level();
 
 
         long now = System.currentTimeMillis();
@@ -3924,7 +3924,7 @@ public class ChargedDapHandler {
         Vec3 handMid = p1Hand.add(p2Hand).scale(0.5);
 
         net.minecraft.world.entity.decoration.ArmorStand stand =
-                new net.minecraft.world.entity.decoration.ArmorStand(net.minecraft.world.entity.EntityType.ARMOR_STAND, world);
+                new net.minecraft.world.entity.decoration.ArmorStand(net.minecraft.world.entity.EntityTypes.ARMOR_STAND, world);
         stand.setPos(handMid.x, handMid.y, handMid.z);
         stand.setInvisible(true);
         stand.setNoGravity(true);
@@ -3942,7 +3942,7 @@ public class ChargedDapHandler {
 
 
 
-        for (ServerPlayer player : p1.getServer().getPlayerList().getPlayers()) {
+        for (ServerPlayer player : p1.level().getServer().getPlayerList().getPlayers()) {
             ServerPlayNetworking.send(player, new FireDapFirstPersonPayload(id1, true));
             ServerPlayNetworking.send(player, new FireDapFirstPersonPayload(id2, true));
         }
@@ -3950,9 +3950,9 @@ public class ChargedDapHandler {
 
 
         p1.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 200, 255, false, false));
-        p1.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 200, 255, false, false));
+        p1.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 200, 255, false, false));
         p2.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 200, 255, false, false));
-        p2.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 200, 255, false, false));
+        p2.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 200, 255, false, false));
 
 
         ServerPlayNetworking.send(p1, new FireDapWindowPayload());
@@ -3980,7 +3980,7 @@ public class ChargedDapHandler {
 
 
         if (elapsed < FIRE_J_WINDOW_START || elapsed > FIRE_J_WINDOW_END) {
-            player.displayClientMessage(net.minecraft.network.chat.Component.literal("§cToo early/late for combo!"), true);
+            com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal("§cToo early/late for combo!"), true);
             return;
         }
 
@@ -3997,14 +3997,14 @@ public class ChargedDapHandler {
 
         if (partnerId.equals(playerId)) {
             fireDapComboRequestTime.put(playerId, now);
-            ServerPlayer partner = player.getServer().getPlayerList().getPlayer(partnerId);
+            ServerPlayer partner = player.level().getServer().getPlayerList().getPlayer(partnerId);
             if (partner != null) {
                 executeFireDapCombo(player, partner);
             }
             return;
         }
 
-        ServerPlayer partner = player.getServer().getPlayerList().getPlayer(partnerId);
+        ServerPlayer partner = player.level().getServer().getPlayerList().getPlayer(partnerId);
         if (partner == null) {
             return;
         }
@@ -4053,7 +4053,7 @@ public class ChargedDapHandler {
         fireDapComboFreezeEnd.put(id2, now + FIRE_COMBO_FREEZE_MS);
 
 
-        for (ServerPlayer player : p1.getServer().getPlayerList().getPlayers()) {
+        for (ServerPlayer player : p1.level().getServer().getPlayerList().getPlayers()) {
             ServerPlayNetworking.send(player, new FireDapFreezePayload(id1, true));
             ServerPlayNetworking.send(player, new FireDapFreezePayload(id2, true));
         }
@@ -4066,24 +4066,24 @@ public class ChargedDapHandler {
 
 
         Vec3 midpoint = p1.position().add(p2.position()).scale(0.5);
-        p1.serverLevel().playSound(null, midpoint.x, midpoint.y, midpoint.z,
+        p1.level().playSound(null, midpoint.x, midpoint.y, midpoint.z,
                 SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS, 2.0f, 0.8f);
 
 
-        for (ServerPlayer player : p1.getServer().getPlayerList().getPlayers()) {
+        for (ServerPlayer player : p1.level().getServer().getPlayerList().getPlayers()) {
             ServerPlayNetworking.send(player, new FireDapFirstPersonPayload(id1, true));
             ServerPlayNetworking.send(player, new FireDapFirstPersonPayload(id2, true));
         }
 
 
-        p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§c§l🔥 DIVINE FLAME COMBO! 🔥"), true);
-        p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§c§l🔥 DIVINE FLAME COMBO! 🔥"), true);
+        com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§c§l🔥 DIVINE FLAME COMBO! 🔥"), true);
+        com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§c§l🔥 DIVINE FLAME COMBO! 🔥"), true);
 
 
         p1.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 100, 255, false, false));
-        p1.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 100, 255, false, false));
+        p1.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 100, 255, false, false));
         p2.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 100, 255, false, false));
-        p2.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 100, 255, false, false));
+        p2.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 100, 255, false, false));
 
 
         spawnVerticalFireWalls(p1, p2);
@@ -4103,7 +4103,7 @@ public class ChargedDapHandler {
     }
 
     private static void spawnAnimatedAuraBeam(ServerPlayer player, long elapsed) {
-        ServerLevel world = player.serverLevel();
+        ServerLevel world = player.level();
         Vec3 playerPos = player.position();
 
 
@@ -4179,7 +4179,7 @@ public class ChargedDapHandler {
     }
 
     private static void spawnVerticalFireWalls(ServerPlayer p1, ServerPlayer p2) {
-        ServerLevel world = p1.serverLevel();
+        ServerLevel world = p1.level();
         Vec3 midpoint = p1.position().add(p2.position()).scale(0.5);
 
 
@@ -4262,7 +4262,7 @@ public class ChargedDapHandler {
     }
 
     private static void spawnFireCircle(ServerPlayer p1, ServerPlayer p2) {
-        ServerLevel world = p1.serverLevel();
+        ServerLevel world = p1.level();
         Vec3 midpoint = p1.position().add(p2.position()).scale(0.5);
 
 
@@ -4299,7 +4299,7 @@ public class ChargedDapHandler {
                 double z = midpoint.z + distance * Math.sin(rad);
 
                 world.sendParticles(ParticleTypes.FLAME, x, midpoint.y + height, z, 5, 0.3, 0.3, 0.3, 0.04);
-                world.sendParticles(ParticleTypes.DRAGON_BREATH, x, midpoint.y + height, z, 3, 0.2, 0.2, 0.2, 0.02);
+                world.sendParticles(net.minecraft.core.particles.PowerParticleOption.create(ParticleTypes.DRAGON_BREATH, 1.0f), x, midpoint.y + height, z, 3, 0.2, 0.2, 0.2, 0.02);
                 world.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, x, midpoint.y + height, z, 2, 0.15, 0.15, 0.15, 0.01);
             }
         }
@@ -4351,7 +4351,7 @@ public class ChargedDapHandler {
     }
 
     private static void executeFireArmImpact(ServerPlayer p1, ServerPlayer p2) {
-        ServerLevel world = p1.serverLevel();
+        ServerLevel world = p1.level();
 
 
         Vec3 midpoint;
@@ -4387,7 +4387,7 @@ public class ChargedDapHandler {
                 double z = midpoint.z + radius * Math.sin(rad);
 
                 world.sendParticles(ParticleTypes.FLAME, x, midpoint.y, z, 3, 0.2, 0.5, 0.2, 0.05);
-                world.sendParticles(ParticleTypes.DRAGON_BREATH, x, midpoint.y, z, 2, 0.15, 0.3, 0.15, 0.03);
+                world.sendParticles(net.minecraft.core.particles.PowerParticleOption.create(ParticleTypes.DRAGON_BREATH, 1.0f), x, midpoint.y, z, 2, 0.15, 0.3, 0.15, 0.03);
             }
         }
 
@@ -4479,7 +4479,7 @@ public class ChargedDapHandler {
     }
 
     private static void spawnFireTornado(ServerPlayer p1, ServerPlayer p2) {
-        ServerLevel world = p1.serverLevel();
+        ServerLevel world = p1.level();
         Vec3 midpoint = p1.position().add(p2.position()).scale(0.5);
 
 
@@ -4518,8 +4518,8 @@ public class ChargedDapHandler {
             Vec3 targetP1 = midpoint.subtract(offset);
             Vec3 targetP2 = midpoint.add(offset);
 
-            p1.teleportTo(p1.serverLevel(), targetP1.x, targetP1.y, targetP1.z, yawP1, 0.0f);
-            p2.teleportTo(p2.serverLevel(), targetP2.x, targetP2.y, targetP2.z, yawP2, 0.0f);
+            com.cooptest.neoforge.PlayerActions.teleport(p1, p1.level(), targetP1.x, targetP1.y, targetP1.z, yawP1, 0.0f);
+            com.cooptest.neoforge.PlayerActions.teleport(p2, p2.level(), targetP2.x, targetP2.y, targetP2.z, yawP2, 0.0f);
 
 
             p1.setYRot(yawP1);
@@ -4530,8 +4530,8 @@ public class ChargedDapHandler {
             p2.setYHeadRot(yawP2);
         } else {
 
-            p1.teleportTo(p1.serverLevel(), p1Pos.x, p1Pos.y, p1Pos.z, yawP1, 0.0f);
-            p2.teleportTo(p2.serverLevel(), p2Pos.x, p2Pos.y, p2Pos.z, yawP2, 0.0f);
+            com.cooptest.neoforge.PlayerActions.teleport(p1, p1.level(), p1Pos.x, p1Pos.y, p1Pos.z, yawP1, 0.0f);
+            com.cooptest.neoforge.PlayerActions.teleport(p2, p2.level(), p2Pos.x, p2Pos.y, p2Pos.z, yawP2, 0.0f);
 
 
             p1.setYRot(yawP1);
@@ -4564,8 +4564,8 @@ public class ChargedDapHandler {
             Vec3 targetP1 = midpoint.subtract(offset);
             Vec3 targetP2 = midpoint.add(offset);
 
-            p1.teleportTo(p1.serverLevel(), targetP1.x, targetP1.y, targetP1.z, yawP1, 0.0f);
-            p2.teleportTo(p2.serverLevel(), targetP2.x, targetP2.y, targetP2.z, yawP2, 0.0f);
+            com.cooptest.neoforge.PlayerActions.teleport(p1, p1.level(), targetP1.x, targetP1.y, targetP1.z, yawP1, 0.0f);
+            com.cooptest.neoforge.PlayerActions.teleport(p2, p2.level(), targetP2.x, targetP2.y, targetP2.z, yawP2, 0.0f);
 
 
             p1.setYRot(yawP1);
@@ -4576,8 +4576,8 @@ public class ChargedDapHandler {
             p2.setYHeadRot(yawP2);
         } else {
 
-            p1.teleportTo(p1.serverLevel(), p1Pos.x, p1Pos.y, p1Pos.z, yawP1, 0.0f);
-            p2.teleportTo(p2.serverLevel(), p2Pos.x, p2Pos.y, p2Pos.z, yawP2, 0.0f);
+            com.cooptest.neoforge.PlayerActions.teleport(p1, p1.level(), p1Pos.x, p1Pos.y, p1Pos.z, yawP1, 0.0f);
+            com.cooptest.neoforge.PlayerActions.teleport(p2, p2.level(), p2Pos.x, p2Pos.y, p2Pos.z, yawP2, 0.0f);
 
 
             p1.setYRot(yawP1);
@@ -4597,7 +4597,7 @@ public class ChargedDapHandler {
             return;
         }
 
-        ServerLevel world = player.serverLevel();
+        ServerLevel world = player.level();
         Vec3 playerPos = player.position();
         Vec3 standPos = stand.position();
 

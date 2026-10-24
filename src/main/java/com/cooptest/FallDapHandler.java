@@ -7,7 +7,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -36,7 +36,7 @@ public class FallDapHandler {
     }
     public record FallDapAnimPayload(UUID playerId, int state) implements CustomPacketPayload {
         public static final Type<FallDapAnimPayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("testcoop", "fall_dap_anim"));
+                new Type<>(Identifier.fromNamespaceAndPath("testcoop", "fall_dap_anim"));
         public static final StreamCodec<FriendlyByteBuf, FallDapAnimPayload> CODEC =
                 StreamCodec.ofMember(
                         (payload, buf) -> {
@@ -50,7 +50,7 @@ public class FallDapHandler {
     }
     public record SquashAnimPayload(UUID playerId) implements CustomPacketPayload {
         public static final Type<SquashAnimPayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("testcoop", "squash_anim"));
+                new Type<>(Identifier.fromNamespaceAndPath("testcoop", "squash_anim"));
         public static final StreamCodec<FriendlyByteBuf, SquashAnimPayload> CODEC =
                 StreamCodec.ofMember(
                         (payload, buf) -> buf.writeUUID(payload.playerId),
@@ -77,17 +77,17 @@ public class FallDapHandler {
                 squashIt.remove();
                 if (player != null) {
                     PoseNetworking.broadcastAnimState(player, 0);
-                    player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
-                    player.removeEffect(MobEffects.JUMP);
+                    player.removeEffect(MobEffects.SLOWNESS);
+                    player.removeEffect(MobEffects.JUMP_BOOST);
                 }
             } else if (player != null) {
-                if (!player.hasEffect(MobEffects.MOVEMENT_SLOWDOWN) ||
-                        player.getEffect(MobEffects.MOVEMENT_SLOWDOWN).getDuration() < 40) {
-                    player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 2, false, false));
+                if (!player.hasEffect(MobEffects.SLOWNESS) ||
+                        player.getEffect(MobEffects.SLOWNESS).getDuration() < 40) {
+                    player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 60, 2, false, false));
                 }
-                if (!player.hasEffect(MobEffects.JUMP) ||
-                        player.getEffect(MobEffects.JUMP).getDuration() < 40) {
-                    player.addEffect(new MobEffectInstance(MobEffects.JUMP, 60, 250, false, false));
+                if (!player.hasEffect(MobEffects.JUMP_BOOST) ||
+                        player.getEffect(MobEffects.JUMP_BOOST).getDuration() < 40) {
+                    player.addEffect(new MobEffectInstance(MobEffects.JUMP_BOOST, 60, 250, false, false));
                 }
             }
         }
@@ -120,7 +120,7 @@ public class FallDapHandler {
                 if (chargeStart != null && now - chargeStart >= FALL_CHARGE_DURATION_MS) {
                     fallDapPlayers.put(playerId, FallDapState.FALLING);
                     broadcastFallDapAnim(player, 2);
-                    player.displayClientMessage(Component.literal("§c§l FALL DAP READY! "), true);
+                    com.cooptest.neoforge.PlayerActions.message(player, Component.literal("§c§l FALL DAP READY! "), true);
                 }
                 if (isOnGround) {
                     if (isChargingDap) {
@@ -153,7 +153,7 @@ public class FallDapHandler {
         fallDapPlayers.put(playerId, FallDapState.CHARGING);
         fallChargeStartTime.put(playerId, System.currentTimeMillis());
         broadcastFallDapAnim(player, 1);
-        player.displayClientMessage(Component.literal("§e§l⚡ FALL DAP CHARGING! ⚡"), true);
+        com.cooptest.neoforge.PlayerActions.message(player, Component.literal("§e§l⚡ FALL DAP CHARGING! ⚡"), true);
     }
     private static void resetToNormalCharge(ServerPlayer player) {
         UUID playerId = player.getUUID();
@@ -163,7 +163,7 @@ public class FallDapHandler {
         broadcastFallDapAnim(player, 0);
         PoseNetworking.broadcastAnimState(player,
                 com.cooptest.client.CoopAnimationHandler.AnimState.DAP_CHARGE_IDLE.ordinal());
-        player.displayClientMessage(Component.literal("§7Fall dap reset - touched ground"), true);
+        com.cooptest.neoforge.PlayerActions.message(player, Component.literal("§7Fall dap reset - touched ground"), true);
     }
     public static boolean isInFallDapState(UUID playerId) {
         FallDapState state = fallDapPlayers.get(playerId);
@@ -179,7 +179,7 @@ public class FallDapHandler {
         cleanup(attackerId);
     }
     private static void squashPlayer(ServerPlayer attacker, ServerPlayer victim) {
-        ServerLevel world = attacker.serverLevel();
+        ServerLevel world = attacker.level();
         Vec3 pos = victim.position();
         world.playSound(null, pos.x, pos.y, pos.z,
                 SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 2.0f, 0.5f);
@@ -189,17 +189,17 @@ public class FallDapHandler {
         world.sendParticles(ParticleTypes.SMOKE, pos.x, pos.y, pos.z, 20, 0.5, 0.2, 0.5, 0.05);
         dropHandItems(victim, world, pos);
         victim.hurt(world.damageSources().playerAttack(attacker), 10.0f);
-        victim.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 420, 2, false, false));
-        victim.addEffect(new MobEffectInstance(MobEffects.JUMP, 420, 250, false, false));
-        victim.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 300, 0, false, false));
+        victim.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 420, 2, false, false));
+        victim.addEffect(new MobEffectInstance(MobEffects.JUMP_BOOST, 420, 250, false, false));
+        victim.addEffect(new MobEffectInstance(MobEffects.NAUSEA, 300, 0, false, false));
         victim.setDeltaMovement(0, 0, 0);
         victim.hurtMarked = true;
         squashedPlayers.put(victim.getUUID(), System.currentTimeMillis() + SQUASHED_DURATION_MS);
         for (ServerPlayer p : world.getServer().getPlayerList().getPlayers()) {
             ServerPlayNetworking.send(p, new SquashAnimPayload(victim.getUUID()));
         }
-        attacker.displayClientMessage(Component.literal("§c§l💀 SQUASHED! 💀"), true);
-        victim.displayClientMessage(Component.literal("§c§lYOU GOT SQUASHED FOR 25 SECONDS!"), true);
+        com.cooptest.neoforge.PlayerActions.message(attacker, Component.literal("§c§l💀 SQUASHED! 💀"), true);
+        com.cooptest.neoforge.PlayerActions.message(victim, Component.literal("§c§lYOU GOT SQUASHED FOR 25 SECONDS!"), true);
     }
     private static void dropHandItems(ServerPlayer player, ServerLevel world, Vec3 pos) {
         net.minecraft.world.item.ItemStack mainStack = player.getMainHandItem();
@@ -208,9 +208,9 @@ public class FallDapHandler {
                     world, pos.x, pos.y + 0.5, pos.z, mainStack.copy()
             );
             mainItem.setDeltaMovement(
-                    (world.random.nextDouble() - 0.5) * 0.3,
-                    world.random.nextDouble() * 0.2 + 0.1,
-                    (world.random.nextDouble() - 0.5) * 0.3
+                    (world.getRandom().nextDouble() - 0.5) * 0.3,
+                    world.getRandom().nextDouble() * 0.2 + 0.1,
+                    (world.getRandom().nextDouble() - 0.5) * 0.3
             );
             world.addFreshEntity(mainItem);
             player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, net.minecraft.world.item.ItemStack.EMPTY);
@@ -221,9 +221,9 @@ public class FallDapHandler {
                     world, pos.x, pos.y + 0.5, pos.z, offStack.copy()
             );
             offItem.setDeltaMovement(
-                    (world.random.nextDouble() - 0.5) * 0.3,
-                    world.random.nextDouble() * 0.2 + 0.1,
-                    (world.random.nextDouble() - 0.5) * 0.3
+                    (world.getRandom().nextDouble() - 0.5) * 0.3,
+                    world.getRandom().nextDouble() * 0.2 + 0.1,
+                    (world.getRandom().nextDouble() - 0.5) * 0.3
             );
             world.addFreshEntity(offItem);
             player.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, net.minecraft.world.item.ItemStack.EMPTY);
@@ -234,9 +234,9 @@ public class FallDapHandler {
                     world, pos.x, pos.y + 1.0, pos.z, helmet.copy()
             );
             helmetItem.setDeltaMovement(
-                    (world.random.nextDouble() - 0.5) * 0.4,
-                    world.random.nextDouble() * 0.4 + 0.3,
-                    (world.random.nextDouble() - 0.5) * 0.4
+                    (world.getRandom().nextDouble() - 0.5) * 0.4,
+                    world.getRandom().nextDouble() * 0.4 + 0.3,
+                    (world.getRandom().nextDouble() - 0.5) * 0.4
             );
             world.addFreshEntity(helmetItem);
             player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD, net.minecraft.world.item.ItemStack.EMPTY);
@@ -244,7 +244,7 @@ public class FallDapHandler {
     }
     private static ServerPlayer findSquashTarget(ServerPlayer attacker, double horizontalRange) {
         double attackerY = attacker.getY();
-        for (ServerPlayer other : attacker.serverLevel().players()) {
+        for (ServerPlayer other : attacker.level().players()) {
             if (other == attacker) continue;
             if (isSquashed(other.getUUID())) continue;
             double otherY = other.getY();
@@ -260,7 +260,7 @@ public class FallDapHandler {
         return null;
     }
     private static ServerPlayer findNearbyPlayer(ServerPlayer player, double range) {
-        for (ServerPlayer other : player.serverLevel().players()) {
+        for (ServerPlayer other : player.level().players()) {
             if (other == player) continue;
             if (other.distanceToSqr(player) <= range * range) {
                 return other;
@@ -278,7 +278,7 @@ public class FallDapHandler {
         return true;
     }
     private static void broadcastFallDapAnim(ServerPlayer player, int state) {
-        var server = player.getServer();
+        var server = player.level().getServer();
         if (server == null) return;
         FallDapAnimPayload payload = new FallDapAnimPayload(player.getUUID(), state);
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {

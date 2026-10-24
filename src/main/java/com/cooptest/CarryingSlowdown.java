@@ -1,7 +1,7 @@
 package com.cooptest;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -14,7 +14,7 @@ public class CarryingSlowdown {
 
     private static final double SLOWDOWN_AMOUNT = -(1.0 - CARRY_SPEED_MULTIPLIER) * 0.1;
 
-    private static final ResourceLocation MODIFIER_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "carrying_slowdown");
+    private static final Identifier MODIFIER_ID = Identifier.fromNamespaceAndPath("cooptest", "carrying_slowdown");
 
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(server -> {

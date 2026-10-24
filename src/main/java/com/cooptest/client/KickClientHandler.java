@@ -4,7 +4,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import java.util.HashMap;
 import java.util.Map;
@@ -79,7 +79,7 @@ public class KickClientHandler {
         }
         if (justPressed && isOnCooldown() && client.player != null) {
             long rem = cooldownEndMs - System.currentTimeMillis();
-            client.player.displayClientMessage(
+            com.cooptest.neoforge.PlayerActions.message(client.player,
                     Component.literal("§cKick cooldown! " + String.format("%.1f", rem / 1000.0) + "s"),
                     true
             );
@@ -92,9 +92,9 @@ public class KickClientHandler {
             wasHeld = false;
         }
     }
-    private static void renderHUD(GuiGraphics context, DeltaTracker tickCounter) {
+    private static void renderHUD(GuiGraphicsExtractor context, DeltaTracker tickCounter) {
         Minecraft client = Minecraft.getInstance();
-        if (client.player == null || client.options.hideGui) return;
+        if (client.player == null || client.gui.hud.isHidden()) return;
         int sw      = context.guiWidth();
         int sh      = context.guiHeight();
         int centreX = sw / 2;
@@ -128,7 +128,7 @@ public class KickClientHandler {
             if (full) {
                 String lbl = "DROP KICK";
                 int lx = centreX - client.font.width(lbl) / 2;
-                context.drawString(client.font, Component.literal("§f" + lbl),
+                context.text(client.font, Component.literal("§f" + lbl),
                         lx, barY - 9, 0xCCFFFFFF, false);
             }
         }

@@ -9,7 +9,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
@@ -65,9 +65,9 @@ public class ChargedDapClientHandler {
 
     private static boolean facingDapImpactActive = false;
     private static long    facingDapImpactStartMs = 0;
-    private static net.minecraft.resources.ResourceLocation IMPAC7_TEXTURE;
-    private static net.minecraft.resources.ResourceLocation IMPAC8_TEXTURE;
-    private static net.minecraft.resources.ResourceLocation IMPAC9_TEXTURE;
+    private static net.minecraft.resources.Identifier IMPAC7_TEXTURE;
+    private static net.minecraft.resources.Identifier IMPAC8_TEXTURE;
+    private static net.minecraft.resources.Identifier IMPAC9_TEXTURE;
 
 
 
@@ -103,15 +103,15 @@ public class ChargedDapClientHandler {
     private static final long IMPACT3_END = 180;
 
 
-    private static net.minecraft.resources.ResourceLocation IMPACT1_TEXTURE;
-    private static net.minecraft.resources.ResourceLocation IMPACT2_TEXTURE;
-    private static net.minecraft.resources.ResourceLocation IMPACT3_TEXTURE;
+    private static net.minecraft.resources.Identifier IMPACT1_TEXTURE;
+    private static net.minecraft.resources.Identifier IMPACT2_TEXTURE;
+    private static net.minecraft.resources.Identifier IMPACT3_TEXTURE;
 
 
-    private static net.minecraft.resources.ResourceLocation PERFECT_FRAME0_TEXTURE;
-    private static net.minecraft.resources.ResourceLocation PERFECT_FRAME1_TEXTURE;
-    private static net.minecraft.resources.ResourceLocation PERFECT_FRAME2_TEXTURE;
-    private static net.minecraft.resources.ResourceLocation PERFECT_FRAME3_TEXTURE;
+    private static net.minecraft.resources.Identifier PERFECT_FRAME0_TEXTURE;
+    private static net.minecraft.resources.Identifier PERFECT_FRAME1_TEXTURE;
+    private static net.minecraft.resources.Identifier PERFECT_FRAME2_TEXTURE;
+    private static net.minecraft.resources.Identifier PERFECT_FRAME3_TEXTURE;
 
 
     private static KeyMapping fireDapComboKey;
@@ -150,7 +150,7 @@ public class ChargedDapClientHandler {
 
     public static void register() {
         chargedDapKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
-                "key.coopmoves.dap", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, "category.coopmoves"
+                "key.coopmoves.dap", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper.CATEGORY
         ));
 
         ClientPlayNetworking.registerGlobalReceiver(ChargedDapHandler.ChargeSyncPayload.ID,
@@ -226,9 +226,9 @@ public class ChargedDapClientHandler {
 
 
                             if (IMPACT1_TEXTURE == null) {
-                                IMPACT1_TEXTURE = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("testcoop", "textures/gui/impact/impact1.png");
-                                IMPACT2_TEXTURE = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("testcoop", "textures/gui/impact/impact2.png");
-                                IMPACT3_TEXTURE = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("testcoop", "textures/gui/impact/impact3.png");
+                                IMPACT1_TEXTURE = net.minecraft.resources.Identifier.fromNamespaceAndPath("testcoop", "textures/gui/impact/impact1.png");
+                                IMPACT2_TEXTURE = net.minecraft.resources.Identifier.fromNamespaceAndPath("testcoop", "textures/gui/impact/impact2.png");
+                                IMPACT3_TEXTURE = net.minecraft.resources.Identifier.fromNamespaceAndPath("testcoop", "textures/gui/impact/impact3.png");
                             }
                         }
                     });
@@ -272,9 +272,9 @@ public class ChargedDapClientHandler {
                     context.client().execute(() -> {
 
                         if (IMPAC7_TEXTURE == null) {
-                            IMPAC7_TEXTURE = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("testcoop", "textures/gui/impact/impac7.png");
-                            IMPAC8_TEXTURE = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("testcoop", "textures/gui/impact/impac8.png");
-                            IMPAC9_TEXTURE = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("testcoop", "textures/gui/impact/impac9.png");
+                            IMPAC7_TEXTURE = net.minecraft.resources.Identifier.fromNamespaceAndPath("testcoop", "textures/gui/impact/impac7.png");
+                            IMPAC8_TEXTURE = net.minecraft.resources.Identifier.fromNamespaceAndPath("testcoop", "textures/gui/impact/impac8.png");
+                            IMPAC9_TEXTURE = net.minecraft.resources.Identifier.fromNamespaceAndPath("testcoop", "textures/gui/impact/impac9.png");
                         }
                         facingDapImpactActive = true;
                         facingDapImpactStartMs = System.currentTimeMillis();
@@ -310,7 +310,7 @@ public class ChargedDapClientHandler {
                 "key.coopmoves.fire_dap_combo",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_J,
-                "category.coopmoves"
+                net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper.CATEGORY
         ));
 
 
@@ -431,9 +431,9 @@ public class ChargedDapClientHandler {
                     return;
                 } else if (onCooldown) {
                     long remaining = (whiffCooldownEnd - System.currentTimeMillis()) / 100;
-                    client.player.displayClientMessage(Component.literal("§cDap on cooldown! " + (remaining / 10.0) + "s"), true);
+                    com.cooptest.neoforge.PlayerActions.message(client.player, Component.literal("§cDap on cooldown! " + (remaining / 10.0) + "s"), true);
                 } else if (!client.player.getMainHandItem().isEmpty()) {
-                    client.player.displayClientMessage(Component.literal("§cMain hand must be empty for charged dap!"), true);
+                    com.cooptest.neoforge.PlayerActions.message(client.player, Component.literal("§cMain hand must be empty for charged dap!"), true);
                 } else {
                     isCharging = true;
                     chargeStartTime = System.currentTimeMillis();
@@ -614,7 +614,7 @@ public class ChargedDapClientHandler {
         }
     }
 
-    private static void renderHUD(GuiGraphics context, DeltaTracker tickCounter) {
+    private static void renderHUD(GuiGraphicsExtractor context, DeltaTracker tickCounter) {
         Minecraft client = Minecraft.getInstance();
         if (client.player == null) return;
 
@@ -665,16 +665,13 @@ public class ChargedDapClientHandler {
                 context.fill(0, 0, screenWidth, screenHeight, (alpha << 24) | 0xFFFFFF);
             } else if (elapsed < IMPACT1_END) {
 
-                com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-                context.blit(IMPACT1_TEXTURE, 0, 0, screenWidth, screenHeight, 0, 0, 1920, 1080, 1920, 1080);
+                context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, IMPACT1_TEXTURE, 0, 0, 0f, 0f, screenWidth, screenHeight, 1920, 1080, 1920, 1080);
             } else if (elapsed < IMPACT2_END) {
 
-                com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-                context.blit(IMPACT2_TEXTURE, 0, 0, screenWidth, screenHeight, 0, 0, 1920, 1080, 1920, 1080);
+                context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, IMPACT2_TEXTURE, 0, 0, 0f, 0f, screenWidth, screenHeight, 1920, 1080, 1920, 1080);
             } else if (elapsed < IMPACT3_END) {
 
-                com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-                context.blit(IMPACT3_TEXTURE, 0, 0, screenWidth, screenHeight, 0, 0, 1920, 1080, 1920, 1080);
+                context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, IMPACT3_TEXTURE, 0, 0, 0f, 0f, screenWidth, screenHeight, 1920, 1080, 1920, 1080);
             } else {
 
                 perfectImpactActive = false;
@@ -687,23 +684,23 @@ public class ChargedDapClientHandler {
 
 
             if (IMPACT3_TEXTURE == null) {
-                IMPACT1_TEXTURE = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("testcoop", "textures/gui/impact/impact1.png");
-                IMPACT2_TEXTURE = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("testcoop", "textures/gui/impact/impact2.png");
-                IMPACT3_TEXTURE = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("testcoop", "textures/gui/impact/impact3.png");
+                IMPACT1_TEXTURE = net.minecraft.resources.Identifier.fromNamespaceAndPath("testcoop", "textures/gui/impact/impact1.png");
+                IMPACT2_TEXTURE = net.minecraft.resources.Identifier.fromNamespaceAndPath("testcoop", "textures/gui/impact/impact2.png");
+                IMPACT3_TEXTURE = net.minecraft.resources.Identifier.fromNamespaceAndPath("testcoop", "textures/gui/impact/impact3.png");
             }
 
 
             if (PERFECT_FRAME0_TEXTURE == null) {
-                PERFECT_FRAME0_TEXTURE = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("testcoop", "textures/gui/impact/frame0.png");
-                PERFECT_FRAME1_TEXTURE = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("testcoop", "textures/gui/impact/frame1.png");
-                PERFECT_FRAME2_TEXTURE = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("testcoop", "textures/gui/impact/frame2.png");
-                PERFECT_FRAME3_TEXTURE = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("testcoop", "textures/gui/impact/frame3.png");
+                PERFECT_FRAME0_TEXTURE = net.minecraft.resources.Identifier.fromNamespaceAndPath("testcoop", "textures/gui/impact/frame0.png");
+                PERFECT_FRAME1_TEXTURE = net.minecraft.resources.Identifier.fromNamespaceAndPath("testcoop", "textures/gui/impact/frame1.png");
+                PERFECT_FRAME2_TEXTURE = net.minecraft.resources.Identifier.fromNamespaceAndPath("testcoop", "textures/gui/impact/frame2.png");
+                PERFECT_FRAME3_TEXTURE = net.minecraft.resources.Identifier.fromNamespaceAndPath("testcoop", "textures/gui/impact/frame3.png");
             }
 
 
 
 
-            net.minecraft.resources.ResourceLocation frameTexture;
+            net.minecraft.resources.Identifier frameTexture;
             if (elapsed < 33) {
                 frameTexture = PERFECT_FRAME0_TEXTURE;
             } else if (elapsed < 66) {
@@ -729,8 +726,7 @@ public class ChargedDapClientHandler {
             }
 
 
-            com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-            context.blit(frameTexture, 0, 0, screenWidth, screenHeight, 0, 0, 1920, 1080, 1920, 1080);
+            context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, frameTexture, 0, 0, 0f, 0f, screenWidth, screenHeight, 1920, 1080, 1920, 1080);
         }
 
 
@@ -741,7 +737,7 @@ public class ChargedDapClientHandler {
 
         if (facingDapImpactActive) {
             long elapsed = System.currentTimeMillis() - facingDapImpactStartMs;
-            net.minecraft.resources.ResourceLocation facingFrame;
+            net.minecraft.resources.Identifier facingFrame;
 
             if (elapsed < 50) {
                 facingFrame = IMPAC7_TEXTURE;
@@ -758,8 +754,7 @@ public class ChargedDapClientHandler {
             }
 
             if (facingFrame != null) {
-                com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-                context.blit(facingFrame, 0, 0, screenWidth, screenHeight, 0, 0, 1920, 1080, 1920, 1080);
+                context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, facingFrame, 0, 0, 0f, 0f, screenWidth, screenHeight, 1920, 1080, 1920, 1080);
             }
         }
 
@@ -775,11 +770,11 @@ public class ChargedDapClientHandler {
             } else {
 
                 if (IMPACT1_TEXTURE == null) {
-                    IMPACT1_TEXTURE = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("testcoop", "textures/gui/impact/impact1.png");
-                    IMPACT2_TEXTURE = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("testcoop", "textures/gui/impact/impact2.png");
-                    IMPACT3_TEXTURE = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("testcoop", "textures/gui/impact/impact3.png");
+                    IMPACT1_TEXTURE = net.minecraft.resources.Identifier.fromNamespaceAndPath("testcoop", "textures/gui/impact/impact1.png");
+                    IMPACT2_TEXTURE = net.minecraft.resources.Identifier.fromNamespaceAndPath("testcoop", "textures/gui/impact/impact2.png");
+                    IMPACT3_TEXTURE = net.minecraft.resources.Identifier.fromNamespaceAndPath("testcoop", "textures/gui/impact/impact3.png");
                 }
-                net.minecraft.resources.ResourceLocation dkTex;
+                net.minecraft.resources.Identifier dkTex;
                 float dkAlpha;
                 if (dke < DK_FADE_IN) {
 
@@ -799,11 +794,7 @@ public class ChargedDapClientHandler {
                     dkTex   = IMPACT3_TEXTURE;
                     dkAlpha = 1.0f - (float)(dke - DK_FRAME3) / (DK_FADE_OUT - DK_FRAME3);
                 }
-                com.mojang.blaze3d.systems.RenderSystem.enableBlend();
-                com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1f, 1f, 1f, dkAlpha);
-                context.blit(dkTex, 0, 0, screenWidth, screenHeight, 0, 0, 1920, 1080, 1920, 1080);
-                com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-                com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+                context.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, dkTex, 0, 0, 0f, 0f, screenWidth, screenHeight, 1920, 1080, 1920, 1080, ((int)(dkAlpha * 255) << 24) | 0xFFFFFF);
             }
         }
 
@@ -843,7 +834,7 @@ public class ChargedDapClientHandler {
                 float timeProgress = (float) elapsed / FIRE_DAP_COMBO_WINDOW_MS;
                 int color = timeProgress < 0.5f ? (alpha << 24) | 0xFF8800 : (alpha << 24) | 0xFF0000;
 
-                context.drawString(client.font, text, textX, textY, color, true);
+                context.text(client.font, text, textX, textY, color, true);
 
 
                 int barWidth = 100;

@@ -23,24 +23,24 @@ public class DebugQTECommand {
             return 0;
         }
         if (QTEManager.isInQTE(player.getUUID())) {
-            player.displayClientMessage(Component.literal("§c§lAlready in a QTE!"), false);
+            com.cooptest.neoforge.PlayerActions.message(player, Component.literal("§c§lAlready in a QTE!"), false);
             return 0;
         }
-        player.displayClientMessage(Component.literal("§a§l[DEBUG] Starting " + stages + "-stage QTE in SOLO MODE!"), false);
-        player.displayClientMessage(Component.literal("§e§lPress the button that appears!"), false);
+        com.cooptest.neoforge.PlayerActions.message(player, Component.literal("§a§l[DEBUG] Starting " + stages + "-stage QTE in SOLO MODE!"), false);
+        com.cooptest.neoforge.PlayerActions.message(player, Component.literal("§e§lPress the button that appears!"), false);
         QTEManager.triggerQTESolo(
                 player,
                 stages,
                 (p1, p2) -> {
-                    p1.displayClientMessage(Component.literal("§d§l★ ALL STAGES COMPLETE! ★"), true);
-                    p1.displayClientMessage(Component.literal("§a§lExtender animation would play here!"), false);// PLS WORKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+                    com.cooptest.neoforge.PlayerActions.message(p1, Component.literal("§d§l★ ALL STAGES COMPLETE! ★"), true);
+                    com.cooptest.neoforge.PlayerActions.message(p1, Component.literal("§a§lExtender animation would play here!"), false);// PLS WORKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
                 },
                 (p1, p2) -> {
-                    p1.displayClientMessage(Component.literal("§c§l✖ QTE FAILED! ✖"), true);
-                    p1.displayClientMessage(Component.literal("§7Better luck next time!"), false);
+                    com.cooptest.neoforge.PlayerActions.message(p1, Component.literal("§c§l✖ QTE FAILED! ✖"), true);
+                    com.cooptest.neoforge.PlayerActions.message(p1, Component.literal("§7Better luck next time!"), false);
                 },
                 (p1, p2, completedStage) -> {
-                    p1.displayClientMessage(Component.literal("§a§l✓ Stage " + completedStage + " clear!"), false);
+                    com.cooptest.neoforge.PlayerActions.message(p1, Component.literal("§a§l✓ Stage " + completedStage + " clear!"), false);
                 }
         );
         return 1;

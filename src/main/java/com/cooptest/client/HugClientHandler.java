@@ -18,7 +18,7 @@ public class HugClientHandler {
                 "key.coopmoves.hug",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_F,
-                "category.coopmoves"
+                net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper.CATEGORY
         ));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.player == null) return;

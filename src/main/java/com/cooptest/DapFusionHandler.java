@@ -7,7 +7,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -81,7 +81,7 @@ public class DapFusionHandler {
             this.p2Id = p2.getUUID();
             this.p1Ref = p1;
             this.p2Ref = p2;
-            this.world = p1.serverLevel();
+            this.world = p1.level();
             this.gWindowOpenTime = now;
         }
         String randomButton() {
@@ -114,7 +114,7 @@ public class DapFusionHandler {
     private static final Map<UUID, Integer> smoothTpProgress = new HashMap<>();
     public record FusionPhasePayload(UUID p1, UUID p2, int phase) implements CustomPacketPayload {
         public static final Type<FusionPhasePayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "fusion_phase"));
+                new Type<>(Identifier.fromNamespaceAndPath("cooptest", "fusion_phase"));
         public static final StreamCodec<FriendlyByteBuf, FusionPhasePayload> CODEC = StreamCodec.ofMember(
                 (payload, buf) -> { buf.writeUUID(payload.p1); buf.writeUUID(payload.p2); buf.writeInt(payload.phase); },
                 buf -> new FusionPhasePayload(buf.readUUID(), buf.readUUID(), buf.readInt())
@@ -123,7 +123,7 @@ public class DapFusionHandler {
     }
     public record FusionQTEPayload(UUID playerId, String button, int stage, long windowStartMs, long windowEndMs, boolean open, int qteType) implements CustomPacketPayload {
         public static final Type<FusionQTEPayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "fusion_qte"));
+                new Type<>(Identifier.fromNamespaceAndPath("cooptest", "fusion_qte"));
         public static final StreamCodec<FriendlyByteBuf, FusionQTEPayload> CODEC = StreamCodec.ofMember(
                 (p, buf) -> { buf.writeUUID(p.playerId); buf.writeUtf(p.button);
                     buf.writeInt(p.stage); buf.writeLong(p.windowStartMs); buf.writeLong(p.windowEndMs);
@@ -135,14 +135,14 @@ public class DapFusionHandler {
     }
     public record FusionGPressPayload() implements CustomPacketPayload {
         public static final Type<FusionGPressPayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "fusion_g_press"));
+                new Type<>(Identifier.fromNamespaceAndPath("cooptest", "fusion_g_press"));
         public static final StreamCodec<FriendlyByteBuf, FusionGPressPayload> CODEC =
                 StreamCodec.ofMember((p, buf) -> {}, buf -> new FusionGPressPayload());
         @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
     public record FusionFusedPayload(boolean fused) implements CustomPacketPayload {
         public static final Type<FusionFusedPayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "fusion_fused"));
+                new Type<>(Identifier.fromNamespaceAndPath("cooptest", "fusion_fused"));
         public static final StreamCodec<FriendlyByteBuf, FusionFusedPayload> CODEC =
                 StreamCodec.ofMember((p, buf) -> buf.writeBoolean(p.fused),
                         buf -> new FusionFusedPayload(buf.readBoolean()));
@@ -150,14 +150,14 @@ public class DapFusionHandler {
     }
     public record FusionUnfusePayload() implements CustomPacketPayload {
         public static final Type<FusionUnfusePayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "fusion_unfuse"));
+                new Type<>(Identifier.fromNamespaceAndPath("cooptest", "fusion_unfuse"));
         public static final StreamCodec<FriendlyByteBuf, FusionUnfusePayload> CODEC =
                 StreamCodec.ofMember((p, buf) -> {}, buf -> new FusionUnfusePayload());
         @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
     public record FusionBlackScreenPayload(boolean active) implements CustomPacketPayload {
         public static final Type<FusionBlackScreenPayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "fusion_black_screen"));
+                new Type<>(Identifier.fromNamespaceAndPath("cooptest", "fusion_black_screen"));
         public static final StreamCodec<FriendlyByteBuf, FusionBlackScreenPayload> CODEC =
                 StreamCodec.ofMember((p, buf) -> buf.writeBoolean(p.active),
                         buf -> new FusionBlackScreenPayload(buf.readBoolean()));
@@ -232,7 +232,7 @@ public class DapFusionHandler {
         long now = System.currentTimeMillis();
         long elapsed = now - s.gWindowOpenTime;
         if (elapsed < FUSION_G_WINDOW_START || elapsed > FUSION_G_WINDOW_END) {
-            player.displayClientMessage(net.minecraft.network.chat.Component.literal("§cToo early/late for fusion!"), true);
+            com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal("§cToo early/late for fusion!"), true);
             return;
         }
         if (player.getUUID().equals(s.p1Id)) {
@@ -294,14 +294,14 @@ public class DapFusionHandler {
         p1.yRotO = yaw1; p1.yBodyRotO = yaw1; p1.yHeadRotO = yaw1;
         p2.setYRot(yaw2); p2.setYBodyRot(yaw2); p2.setYHeadRot(yaw2);
         p2.yRotO = yaw2; p2.yBodyRotO = yaw2; p2.yHeadRotO = yaw2;
-        p1.teleportTo(p1.serverLevel(), pos1.x, pos1.y, pos1.z, yaw1, 0);
-        p2.teleportTo(p2.serverLevel(), pos2.x, pos2.y, pos2.z, yaw2, 0);
+        com.cooptest.neoforge.PlayerActions.teleport(p1, p1.level(), pos1.x, pos1.y, pos1.z, yaw1, 0);
+        com.cooptest.neoforge.PlayerActions.teleport(p2, p2.level(), pos2.x, pos2.y, pos2.z, yaw2, 0);
     }
     private static void scheduleWalkQTE(FusionSession s) {
         new Thread(() -> {
             try { Thread.sleep(300); } catch (InterruptedException ignored) {}
-            if (s.p1Ref.getServer() == null) return;
-            s.p1Ref.getServer().execute(() -> openWalkQTE(s));
+            if (s.p1Ref.level().getServer() == null) return;
+            s.p1Ref.level().getServer().execute(() -> openWalkQTE(s));
         }).start();
     }
     private static void openWalkQTE(FusionSession s) {
@@ -388,8 +388,8 @@ public class DapFusionHandler {
                     com.cooptest.client.CoopAnimationHandler.AnimState.FUSION_START_P2.ordinal());
             new Thread(() -> {
                 try { Thread.sleep(SMOOTH_TP_TICKS * 50 + 420L); } catch (InterruptedException ignored) {}
-                if (s.p1Ref.getServer() == null) return;
-                s.p1Ref.getServer().execute(() -> triggerMeetupExplosion(s));
+                if (s.p1Ref.level().getServer() == null) return;
+                s.p1Ref.level().getServer().execute(() -> triggerMeetupExplosion(s));
             }).start();
         } else {
             scheduleWalkQTE(s);
@@ -411,8 +411,8 @@ public class DapFusionHandler {
         s.p1Ref.hurtMarked = true;
         s.p2Ref.hurtMarked = true;
         broadcast(s, new FusionPhasePayload(s.p1Id, s.p2Id, 99));
-        s.p1Ref.displayClientMessage(net.minecraft.network.chat.Component.literal(reason), true);
-        s.p2Ref.displayClientMessage(net.minecraft.network.chat.Component.literal(reason), true);
+        com.cooptest.neoforge.PlayerActions.message(s.p1Ref, net.minecraft.network.chat.Component.literal(reason), true);
+        com.cooptest.neoforge.PlayerActions.message(s.p2Ref, net.minecraft.network.chat.Component.literal(reason), true);
         cleanupSession(s);
     }
     private static void triggerMeetupExplosion(FusionSession s) {
@@ -423,12 +423,12 @@ public class DapFusionHandler {
                 com.cooptest.client.CoopAnimationHandler.AnimState.FUSION_HIT_P2.ordinal());
         new Thread(() -> {
             try { Thread.sleep(350); } catch (InterruptedException ignored) {}
-            if (s.p1Ref.getServer() == null) return;
-            s.p1Ref.getServer().execute(() -> {
+            if (s.p1Ref.level().getServer() == null) return;
+            s.p1Ref.level().getServer().execute(() -> {
                 if (s.phase == FusionPhase.WALK_QTE) {
                     Vec3 mid = s.p1Ref.position().add(s.p2Ref.position()).scale(0.5).add(0, 1, 0);
                     s.world.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, mid.x, mid.y, mid.z, 60, 0.8, 0.8, 0.8, 0.3);
-                    s.world.sendParticles(ParticleTypes.FLASH, mid.x, mid.y, mid.z, 5, 0, 0, 0, 0);
+                    s.world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF), mid.x, mid.y, mid.z, 5, 0, 0, 0, 0);
                     s.world.sendParticles(ParticleTypes.ELECTRIC_SPARK, mid.x, mid.y, mid.z, 30, 0.4, 0.4, 0.4, 0.3);
                     s.world.playSound(null, mid.x, mid.y, mid.z,
                             ModSounds.EPIC_DAP, SoundSource.PLAYERS, 3.0f, 0.8f);
@@ -439,8 +439,8 @@ public class DapFusionHandler {
         }).start();
         new Thread(() -> {
             try { Thread.sleep(620); } catch (InterruptedException ignored) {}
-            if (s.p1Ref.getServer() == null) return;
-            s.p1Ref.getServer().execute(() -> {
+            if (s.p1Ref.level().getServer() == null) return;
+            s.p1Ref.level().getServer().execute(() -> {
                 if (s.phase != FusionPhase.WALK_QTE) return;
                 broadcastServer(s, "§6§l⚡ THE FUSION BEGINS! ⚡ §7Complete the 10-stage QTE!");
                 s.phase = FusionPhase.FUSION_QTE;
@@ -531,16 +531,16 @@ public class DapFusionHandler {
             String progress = s.fusionStage >= 10
                     ? "§6§l★ 10/10 ★"
                     : "§a" + s.fusionStage + "/10 §7— §6Keep going!";
-            s.p1Ref.displayClientMessage(net.minecraft.network.chat.Component.literal(progress), true);
-            if (!s.isSolo()) s.p2Ref.displayClientMessage(net.minecraft.network.chat.Component.literal(progress), true);
+            com.cooptest.neoforge.PlayerActions.message(s.p1Ref, net.minecraft.network.chat.Component.literal(progress), true);
+            if (!s.isSolo()) com.cooptest.neoforge.PlayerActions.message(s.p2Ref, net.minecraft.network.chat.Component.literal(progress), true);
             if (s.fusionStage >= 10) {
                 triggerFusion(s);
             } else {
                 ServerPlayer p1 = s.p1Ref;
                 new Thread(() -> {
                     try { Thread.sleep(FUSION_STAGE_GAP_MS); } catch (InterruptedException ignored) {}
-                    if (p1.getServer() == null) return;
-                    p1.getServer().execute(() -> openNextFusionQTE(s));
+                    if (p1.level().getServer() == null) return;
+                    p1.level().getServer().execute(() -> openNextFusionQTE(s));
                 }).start();
             }
         }
@@ -561,10 +561,10 @@ public class DapFusionHandler {
         s.p1Ref.hurtMarked = true;
         s.p2Ref.hurtMarked = true;
         broadcast(s, new FusionPhasePayload(s.p1Id, s.p2Id, 99));
-        s.p1Ref.displayClientMessage(net.minecraft.network.chat.Component.literal(reason), false);
-        s.p2Ref.displayClientMessage(net.minecraft.network.chat.Component.literal(reason), false);
-        for (ServerPlayer p : s.p1Ref.getServer().getPlayerList().getPlayers()) {
-            p.displayClientMessage(net.minecraft.network.chat.Component.literal(
+        com.cooptest.neoforge.PlayerActions.message(s.p1Ref, net.minecraft.network.chat.Component.literal(reason), false);
+        com.cooptest.neoforge.PlayerActions.message(s.p2Ref, net.minecraft.network.chat.Component.literal(reason), false);
+        for (ServerPlayer p : s.p1Ref.level().getServer().getPlayerList().getPlayers()) {
+            com.cooptest.neoforge.PlayerActions.message(p, net.minecraft.network.chat.Component.literal(
                     "§c✗ " + s.p1Ref.getName().getString() + " §7and §c" +
                             s.p2Ref.getName().getString() + " §7failed the fusion!"), false);
         }
@@ -576,9 +576,9 @@ public class DapFusionHandler {
         PoseNetworking.broadcastAnimState(s.p2Ref, 0);
         freezeBoth(s, false);
         net.minecraft.world.effect.MobEffectInstance invuln1 = new net.minecraft.world.effect.MobEffectInstance(
-                net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE, 300, 255, false, false);
+                net.minecraft.world.effect.MobEffects.RESISTANCE, 300, 255, false, false);
         net.minecraft.world.effect.MobEffectInstance invuln2 = new net.minecraft.world.effect.MobEffectInstance(
-                net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE, 300, 255, false, false);
+                net.minecraft.world.effect.MobEffects.RESISTANCE, 300, 255, false, false);
         s.p1Ref.addEffect(invuln1);
         s.p2Ref.addEffect(invuln2);
         s.p1Ref.setInvulnerable(true);
@@ -593,7 +593,7 @@ public class DapFusionHandler {
         Vec3 mid = s.p1Ref.position().add(s.p2Ref.position()).scale(0.5);
         new Thread(() -> {
             try {
-                s.p1Ref.getServer().execute(() -> {
+                s.p1Ref.level().getServer().execute(() -> {
                     if (!CoopMovesConfig.get().noGriefMode) {
                         float power = 10.0f;
                         for (int dx = -8; dx <= 8; dx += 8) {
@@ -615,8 +615,8 @@ public class DapFusionHandler {
                 for (int i = 0; i < 10; i++) {
                     Thread.sleep(500);
                     final int burst = i;
-                    if (s.p1Ref.getServer() == null) return;
-                    s.p1Ref.getServer().execute(() -> {
+                    if (s.p1Ref.level().getServer() == null) return;
+                    s.p1Ref.level().getServer().execute(() -> {
                         float spread = 3.0f + burst * 1.5f;
                         int count = 60 + burst * 20;
                         for (int p = 0; p < 5; p++) {
@@ -633,7 +633,7 @@ public class DapFusionHandler {
                         s.world.sendParticles(ParticleTypes.ELECTRIC_SPARK,
                                 mid.x, mid.y + 2, mid.z,
                                 count / 2, spread * 0.8, spread * 0.8, spread * 0.8, 0.6);
-                        s.world.sendParticles(ParticleTypes.DRAGON_BREATH,
+                        s.world.sendParticles(net.minecraft.core.particles.PowerParticleOption.create(ParticleTypes.DRAGON_BREATH, 1.0f),
                                 mid.x, mid.y + 1, mid.z,
                                 count / 3, spread, spread, spread, 0.3);
                         s.world.sendParticles(ParticleTypes.END_ROD,
@@ -650,9 +650,9 @@ public class DapFusionHandler {
                     });
                 }
             } catch (InterruptedException ignored) {}
-            if (s.p1Ref.getServer() == null) return;
-            s.p1Ref.getServer().execute(() -> {
-                s.world.sendParticles(ParticleTypes.FLASH, mid.x, mid.y + 1, mid.z, 20, 0, 0, 0, 0);
+            if (s.p1Ref.level().getServer() == null) return;
+            s.p1Ref.level().getServer().execute(() -> {
+                s.world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF), mid.x, mid.y + 1, mid.z, 20, 0, 0, 0, 0);
                 s.world.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, mid.x, mid.y + 1, mid.z, 200, 4, 4, 4, 0.6);
                 s.world.sendParticles(ParticleTypes.EXPLOSION_EMITTER, mid.x, mid.y + 1, mid.z, 8, 3, 3, 3, 0);
                 s.world.playSound(null, mid.x, mid.y, mid.z,
@@ -664,14 +664,14 @@ public class DapFusionHandler {
                 try { ServerPlayNetworking.send(s.p1Ref, new FusionBlackScreenPayload(false)); } catch (Exception ignored) {}
                 try { ServerPlayNetworking.send(s.p2Ref, new FusionBlackScreenPayload(false)); } catch (Exception ignored) {}
                 try { broadcast(s, new FusionPhasePayload(s.p1Id, s.p2Id, 4)); } catch (Exception ignored) {}
-                for (ServerPlayer p : s.p1Ref.getServer().getPlayerList().getPlayers()) {
-                    p.displayClientMessage(net.minecraft.network.chat.Component.literal(
+                for (ServerPlayer p : s.p1Ref.level().getServer().getPlayerList().getPlayers()) {
+                    com.cooptest.neoforge.PlayerActions.message(p, net.minecraft.network.chat.Component.literal(
                             "§c§l☄ " + s.p1Ref.getName().getString() +
                                     " §eand §c" + s.p2Ref.getName().getString() +
                                     " §c§lUNLOCKED METEOR STRIKE! §7Press G to fire!"), false);
                 }
-                ServerPlayer freshP1 = s.p1Ref.getServer().getPlayerList().getPlayer(s.p1Id);
-                ServerPlayer freshP2 = s.p1Ref.getServer().getPlayerList().getPlayer(s.p2Id);
+                ServerPlayer freshP1 = s.p1Ref.level().getServer().getPlayerList().getPlayer(s.p1Id);
+                ServerPlayer freshP2 = s.p1Ref.level().getServer().getPlayerList().getPlayer(s.p2Id);
                 if (freshP1 != null && freshP2 != null) {
                     MeteorStrikeHandler.grantAbility(freshP1, freshP2);
                 }
@@ -755,7 +755,7 @@ public class DapFusionHandler {
         double x = start.x + (end.x - start.x) * t;
         double y = start.y + (end.y - start.y) * t;
         double z = start.z + (end.z - start.z) * t;
-        player.teleportTo(player.serverLevel(), x, y, z, player.getYRot(), player.getXRot());
+        com.cooptest.neoforge.PlayerActions.teleport(player, player.level(), x, y, z, player.getYRot(), player.getXRot());
         player.setDeltaMovement(Vec3.ZERO);
         player.hurtMarked = true;
         if (tick >= SMOOTH_TP_TICKS) {
@@ -826,7 +826,7 @@ public class DapFusionHandler {
         s.world.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, mid.x, mid.y, mid.z, count, intensity, intensity, intensity, 0.1 + stage * 0.02);
         s.world.sendParticles(ParticleTypes.ELECTRIC_SPARK, mid.x, mid.y, mid.z, count / 2, intensity, intensity, intensity, 0.2);
         if (stage >= 7) {
-            s.world.sendParticles(ParticleTypes.DRAGON_BREATH, mid.x, mid.y, mid.z, count, intensity, intensity, intensity, 0.15);
+            s.world.sendParticles(net.minecraft.core.particles.PowerParticleOption.create(ParticleTypes.DRAGON_BREATH, 1.0f), mid.x, mid.y, mid.z, count, intensity, intensity, intensity, 0.15);
         }
     }
     private static void sendFusionQTE(ServerPlayer player, String button, int stage, long windowStartMs, long windowEndMs, boolean open, int type) {
@@ -839,18 +839,18 @@ public class DapFusionHandler {
         sendFusionQTE(player, button, stage, 0, 0, false, 0);
     }
     private static void broadcast(FusionSession s, CustomPacketPayload payload) {
-        for (ServerPlayer p : s.p1Ref.getServer().getPlayerList().getPlayers()) {
+        for (ServerPlayer p : s.p1Ref.level().getServer().getPlayerList().getPlayers()) {
             try { ServerPlayNetworking.send(p, payload); } catch (Exception ignored) {}
         }
     }
     private static void broadcastServer(FusionSession s, String msg) {
-        for (ServerPlayer p : s.p1Ref.getServer().getPlayerList().getPlayers()) {
-            p.displayClientMessage(net.minecraft.network.chat.Component.literal(msg), false);
+        for (ServerPlayer p : s.p1Ref.level().getServer().getPlayerList().getPlayers()) {
+            com.cooptest.neoforge.PlayerActions.message(p, net.minecraft.network.chat.Component.literal(msg), false);
         }
     }
     public static void autoPressBothCorrect(ServerPlayer player) {
         FusionSession s = sessions.get(player.getUUID());
-        if (s == null) { player.displayClientMessage(net.minecraft.network.chat.Component.literal("§cNo active fusion session."), true); return; }
+        if (s == null) { com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal("§cNo active fusion session."), true); return; }
         if (s.phase == FusionPhase.WALK_QTE && s.walkQteOpen) {
             handleWalkQTEPress(s, s.p1Id, s.walkExpectedButton);
             if (s.walkQteOpen) handleWalkQTEPress(s, s.p2Id, s.walkExpectedButton);
@@ -861,7 +861,7 @@ public class DapFusionHandler {
             handleGPressFromClient(player);
             handleGPressFromClient(player);
         } else {
-            player.displayClientMessage(net.minecraft.network.chat.Component.literal("§cNo QTE window currently open. Phase: " + s.phase), true);
+            com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal("§cNo QTE window currently open. Phase: " + s.phase), true);
         }
     }
     public static void debugSkipToFusionQTE(ServerPlayer player) {
@@ -896,7 +896,7 @@ public class DapFusionHandler {
     private static void handleUnfuseRequest(ServerPlayer player) {
         UUID partnerId = fusedPairs.get(player.getUUID());
         if (partnerId == null) return;
-        ServerPlayer partner = player.getServer().getPlayerList().getPlayer(partnerId);
+        ServerPlayer partner = player.level().getServer().getPlayerList().getPlayer(partnerId);
         defuse(player, partner);
     }
     public static void defuse(ServerPlayer p1, ServerPlayer p2) {
@@ -922,20 +922,20 @@ public class DapFusionHandler {
             p2.push(away2.x, away2.y, away2.z);
             p2.hurtMarked = true;
         }
-        p1.serverLevel().playSound(null, mid.x, mid.y, mid.z,
+        p1.level().playSound(null, mid.x, mid.y, mid.z,
                 SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1.5f, 1.5f);
-        p1.serverLevel().sendParticles(ParticleTypes.EXPLOSION_EMITTER,
+        p1.level().sendParticles(ParticleTypes.EXPLOSION_EMITTER,
                 mid.x, mid.y + 1, mid.z, 2, 0.5, 0.5, 0.5, 0);
         try { ServerPlayNetworking.send(p1, new FusionFusedPayload(false)); } catch (Exception ignored) {}
         if (p2 != null) {
             try { ServerPlayNetworking.send(p2, new FusionFusedPayload(false)); } catch (Exception ignored) {}
         }
-        p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§7Fusion dissolved."), true);
-        if (p2 != null) p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§7Fusion dissolved."), true);
+        com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§7Fusion dissolved."), true);
+        if (p2 != null) com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§7Fusion dissolved."), true);
         String name1 = p1.getName().getString();
         String name2 = p2 != null ? p2.getName().getString() : name1;
-        for (ServerPlayer p : p1.getServer().getPlayerList().getPlayers()) {
-            p.displayClientMessage(net.minecraft.network.chat.Component.literal(
+        for (ServerPlayer p : p1.level().getServer().getPlayerList().getPlayers()) {
+            com.cooptest.neoforge.PlayerActions.message(p, net.minecraft.network.chat.Component.literal(
                     "§7" + name1 + " and " + name2 + " have defused."), false);
         }
     }

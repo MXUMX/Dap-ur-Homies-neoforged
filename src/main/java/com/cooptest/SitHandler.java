@@ -6,7 +6,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
 import com.mojang.brigadier.context.CommandContext;
@@ -14,7 +14,7 @@ import java.util.*;
 public class SitHandler {
     public record SitFHoldPayload(boolean holding) implements CustomPacketPayload {
         public static final Type<SitFHoldPayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "sit_f_hold"));
+                new Type<>(Identifier.fromNamespaceAndPath("cooptest", "sit_f_hold"));
         public static final StreamCodec<FriendlyByteBuf, SitFHoldPayload> CODEC =
                 StreamCodec.ofMember((v, buf) -> buf.writeBoolean(v.holding()),
                         buf -> new SitFHoldPayload(buf.readBoolean()));
@@ -38,7 +38,7 @@ public class SitHandler {
                 p.setDeltaMovement(0, 0, 0);
                 p.hurtMarked = true;
                 if (Math.abs(p.getY() - sitY) > 0.05) {
-                    p.teleportTo(p.serverLevel(), p.getX(), sitY, p.getZ(),
+                    com.cooptest.neoforge.PlayerActions.teleport(p, p.level(), p.getX(), sitY, p.getZ(),
                             java.util.Set.of(), p.getYRot(), p.getXRot());
                 }
             }
@@ -60,13 +60,13 @@ public class SitHandler {
         double originalY = player.getY();
         double sitY = originalY - 0.5;
         sittingPlayers.put(id, originalY);
-        player.teleportTo(player.serverLevel(),
+        com.cooptest.neoforge.PlayerActions.teleport(player, player.level(),
                 player.getX(), sitY, player.getZ(),
                 java.util.Set.of(), player.getYRot(), player.getXRot());
         ServerPlayNetworking.send(player, new ChargedDapHandler.PerfectDapFreezePayload(true));
         PoseNetworking.broadcastAnimState(player,
                 com.cooptest.client.CoopAnimationHandler.AnimState.SITTING.ordinal());
-        player.displayClientMessage(net.minecraft.network.chat.Component.literal("§7[Sitting — a friend can hold F to help you up]"), true);
+        com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal("§7[Sitting — a friend can hold F to help you up]"), true);
     }
     private static void onFHold(ServerPlayer helper, boolean holding) {
         UUID hid = helper.getUUID();
@@ -74,7 +74,7 @@ public class SitHandler {
         if (!holding) {
             UUID sitterId = reachingSitter.remove(hid);
             if (sitterId == null) return;
-            ServerPlayer sitter = helper.getServer().getPlayerList().getPlayer(sitterId);
+            ServerPlayer sitter = helper.level().getServer().getPlayerList().getPlayer(sitterId);
             if (sitter == null || !isSitting(sitterId)) return;
             if (helper.distanceTo(sitter) > 1.5f) {
                 PoseNetworking.broadcastAnimState(helper,
@@ -86,7 +86,7 @@ public class SitHandler {
             ServerPlayer nearest = null;
             double closest = 3.0;
             for (UUID sid : sittingPlayers.keySet()) {
-                ServerPlayer s = helper.getServer().getPlayerList().getPlayer(sid);
+                ServerPlayer s = helper.level().getServer().getPlayerList().getPlayer(sid);
                 if (s != null && helper.distanceTo(s) < closest) { closest = helper.distanceTo(s); nearest = s; }
             }
             if (nearest == null) return;
@@ -114,21 +114,21 @@ public class SitHandler {
                 com.cooptest.client.CoopAnimationHandler.AnimState.REACH_PICKUP.ordinal());
         PoseNetworking.broadcastAnimState(sitter,
                 com.cooptest.client.CoopAnimationHandler.AnimState.STAND_UP.ordinal());
-        var server = helper.getServer();
+        var server = helper.level().getServer();
         schedule(server, 2880L, () -> {
             ServerPlayer h = server.getPlayerList().getPlayer(hid);
             ServerPlayer s = server.getPlayerList().getPlayer(sid);
             if (h == null || s == null) return;
             Vec3 dir = s.position().subtract(h.position()).normalize();
             Vec3 mid = h.position().add(0, 1.2, 0).add(dir.scale(0.5));
-            h.serverLevel().playSound(null, mid.x, mid.y, mid.z,
+            h.level().playSound(null, mid.x, mid.y, mid.z,
                     ModSounds.DAP_HIT, net.minecraft.sounds.SoundSource.PLAYERS, 1.2f, 0.8f);
-            h.serverLevel().playSound(null, mid.x, mid.y, mid.z,
+            h.level().playSound(null, mid.x, mid.y, mid.z,
                     net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_CRIT,
                     net.minecraft.sounds.SoundSource.PLAYERS, 1.0f, 1.0f);
-            h.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.CRIT,
+            h.level().sendParticles(net.minecraft.core.particles.ParticleTypes.CRIT,
                     mid.x, mid.y, mid.z, 8, 0.15, 0.15, 0.15, 0.06);
-            h.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.ENCHANTED_HIT,
+            h.level().sendParticles(net.minecraft.core.particles.ParticleTypes.ENCHANTED_HIT,
                     mid.x, mid.y, mid.z, 4, 0.1, 0.1, 0.1, 0.04);
         });
         final long   LIFT_START_MS = 3880L;
@@ -147,7 +147,7 @@ public class SitHandler {
                 if (originalY == null) return;
                 double t   = (double) step / LIFT_STEPS;
                 double liftY = sitY + (originalY - sitY) * t;
-                s.teleportTo(s.serverLevel(), s.getX(), liftY, s.getZ(),
+                com.cooptest.neoforge.PlayerActions.teleport(s, s.level(), s.getX(), liftY, s.getZ(),
                         java.util.Set.of(), s.getYRot(), s.getXRot());
             });
         }
@@ -159,10 +159,10 @@ public class SitHandler {
             if (h == null || s == null) return;
             Vec3 dir2 = s.position().subtract(h.position()).normalize();
             Vec3 newHelperPos = h.position().add(dir2.scale(-HELPER_PUSH_BACKWARD));
-            h.teleportTo(h.serverLevel(), newHelperPos.x, h.getY(), newHelperPos.z,
+            com.cooptest.neoforge.PlayerActions.teleport(h, h.level(), newHelperPos.x, h.getY(), newHelperPos.z,
                     java.util.Set.of(), h.getYRot(), h.getXRot());
             Vec3 newSitterPos = s.position().add(dir2.scale(-SITTER_PUSH_FORWARD));
-            s.teleportTo(s.serverLevel(), newSitterPos.x, s.getY(), newSitterPos.z,
+            com.cooptest.neoforge.PlayerActions.teleport(s, s.level(), newSitterPos.x, s.getY(), newSitterPos.z,
                     java.util.Set.of(), s.getYRot(), s.getXRot());
         });
         schedule(server, 5200L, () -> {
@@ -185,7 +185,7 @@ public class SitHandler {
         UUID id = player.getUUID();
         Double oy = sittingPlayers.remove(id);
         if (oy != null) {
-            player.teleportTo(player.serverLevel(),
+            com.cooptest.neoforge.PlayerActions.teleport(player, player.level(),
                     player.getX(), oy, player.getZ(),
                     java.util.Set.of(), player.getYRot(), player.getXRot());
         }

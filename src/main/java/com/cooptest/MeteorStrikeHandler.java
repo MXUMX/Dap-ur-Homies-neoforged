@@ -7,7 +7,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -42,14 +42,14 @@ public class MeteorStrikeHandler {
     }
     public record MeteorFirePayload() implements CustomPacketPayload {
         public static final Type<MeteorFirePayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "meteor_fire"));
+                new Type<>(Identifier.fromNamespaceAndPath("cooptest", "meteor_fire"));
         public static final StreamCodec<FriendlyByteBuf, MeteorFirePayload> CODEC =
                 StreamCodec.ofMember((p, buf) -> {}, buf -> new MeteorFirePayload());
         @Override public Type<? extends CustomPacketPayload> type() { return ID; }
     }
     public record MeteorGrantPayload(long expiryMs) implements CustomPacketPayload {
         public static final Type<MeteorGrantPayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "meteor_grant"));
+                new Type<>(Identifier.fromNamespaceAndPath("cooptest", "meteor_grant"));
         public static final StreamCodec<FriendlyByteBuf, MeteorGrantPayload> CODEC =
                 StreamCodec.ofMember((p, buf) -> buf.writeLong(p.expiryMs),
                         buf -> new MeteorGrantPayload(buf.readLong()));
@@ -57,7 +57,7 @@ public class MeteorStrikeHandler {
     }
     public record MeteorStatusPayload(long remainingAbilityMs, long countdownMs) implements CustomPacketPayload {
         public static final Type<MeteorStatusPayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "meteor_status"));
+                new Type<>(Identifier.fromNamespaceAndPath("cooptest", "meteor_status"));
         public static final StreamCodec<FriendlyByteBuf, MeteorStatusPayload> CODEC =
                 StreamCodec.ofMember((p, buf) -> { buf.writeLong(p.remainingAbilityMs); buf.writeLong(p.countdownMs); },
                         buf -> new MeteorStatusPayload(buf.readLong(), buf.readLong()));
@@ -65,7 +65,7 @@ public class MeteorStrikeHandler {
     }
     public record MeteorExpiredPayload() implements CustomPacketPayload {
         public static final Type<MeteorExpiredPayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "meteor_expired"));
+                new Type<>(Identifier.fromNamespaceAndPath("cooptest", "meteor_expired"));
         public static final StreamCodec<FriendlyByteBuf, MeteorExpiredPayload> CODEC =
                 StreamCodec.ofMember((p, buf) -> {}, buf -> new MeteorExpiredPayload());
         @Override public Type<? extends CustomPacketPayload> type() { return ID; }
@@ -93,8 +93,8 @@ public class MeteorStrikeHandler {
         abilityExpiry.put(p2.getUUID(), expiry);
         try { ServerPlayNetworking.send(p1, new MeteorGrantPayload(expiry)); } catch (Exception ignored) {}
         try { ServerPlayNetworking.send(p2, new MeteorGrantPayload(expiry)); } catch (Exception ignored) {}
-        for (ServerPlayer p : p1.getServer().getPlayerList().getPlayers()) {
-            p.displayClientMessage(net.minecraft.network.chat.Component.literal(
+        for (ServerPlayer p : p1.level().getServer().getPlayerList().getPlayers()) {
+            com.cooptest.neoforge.PlayerActions.message(p, net.minecraft.network.chat.Component.literal(
                     "§c☄ " + p1.getName().getString() + " §7and §c" +
                             p2.getName().getString() + " §7have unlocked §c§lMETEOR STRIKE§7! Press §lG§7 to fire!"), false);
         }
@@ -114,7 +114,7 @@ public class MeteorStrikeHandler {
         for (double d = 1.0; d <= 80.0; d += 0.5) {
             Vec3 point = eye.add(look.scale(d));
             BlockPos bp = BlockPos.containing(point);
-            if (!player.serverLevel().getBlockState(bp).isAir()) {
+            if (!player.level().getBlockState(bp).isAir()) {
                 target = bp;
                 break;
             }
@@ -123,17 +123,17 @@ public class MeteorStrikeHandler {
             Vec3 endpoint = eye.add(look.scale(80.0));
             target = BlockPos.containing(endpoint);
         }
-        pendingMeteors.put(id, new PendingMeteor(id, target, player.serverLevel()));
+        pendingMeteors.put(id, new PendingMeteor(id, target, player.level()));
         final BlockPos finalTarget = target;
         Vec3 targetCenter = Vec3.atCenterOf(finalTarget);
         for (double d = 0; d < eye.distanceTo(targetCenter); d += 1.0) {
             Vec3 point = eye.add(look.scale(d));
-            player.serverLevel().sendParticles(ParticleTypes.CRIT,
+            player.level().sendParticles(ParticleTypes.CRIT,
                     point.x, point.y, point.z, 1, 0, 0, 0, 0);
         }
-        player.serverLevel().playSound(null, player.getX(), player.getY(), player.getZ(),
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 2.0f, 0.5f);
-        player.displayClientMessage(net.minecraft.network.chat.Component.literal(
+        com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal(
                 "§c☄ METEOR INCOMING §7— impact in 3 seconds!"), true);
     }
     private static void tick(MinecraftServer server) {

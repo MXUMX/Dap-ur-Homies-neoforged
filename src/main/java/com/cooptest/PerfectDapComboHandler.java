@@ -68,9 +68,9 @@ public class PerfectDapComboHandler {
         activeCombos.put(id2, s);
         ServerPlayNetworking.send(p1, new DapFusionHandler.FusionQTEPayload(p1.getUUID(), s.button, 0, 0L, FIRST_QTE_MS, true, 0));
         ServerPlayNetworking.send(p2, new DapFusionHandler.FusionQTEPayload(p2.getUUID(), s.button, 0, 0L, FIRST_QTE_MS, true, 0));
-        p1.serverLevel().playSound(null, pos.x, pos.y, pos.z,
+        p1.level().playSound(null, pos.x, pos.y, pos.z,
                 SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.PLAYERS, 0.8f, 1.6f);
-        p1.serverLevel().playSound(null, pos.x, pos.y, pos.z,
+        p1.level().playSound(null, pos.x, pos.y, pos.z,
                 ModSounds.DAP_HIT, SoundSource.PLAYERS, 0.5f, 1.2f);
     }
     public static boolean onButtonPress(ServerPlayer player, String button) {
@@ -80,7 +80,7 @@ public class PerfectDapComboHandler {
         if (s == null) return false;
         if (s.qteOpen) {
             if ("FAIL".equals(button) || !button.equals(s.button)) {
-                failCombo(s, player.getServer(), id);
+                failCombo(s, player.level().getServer(), id);
                 return true;
             }
             if (id.equals(s.p1)) s.p1Hit = true;
@@ -126,7 +126,7 @@ public class PerfectDapComboHandler {
                     s.lastOrbitMs = nowMs;
                     s.orbitAngle += 0.45;
                     int pts = Math.min(s.count, 8);
-                    ServerLevel world = p1.serverLevel();
+                    ServerLevel world = p1.level();
                     for (ServerPlayer tgt : new ServerPlayer[]{p1, p2}) {
                         Vec3 tp = tgt.position().add(0, 1.1, 0);
                         for (int i = 0; i < pts; i++) {
@@ -158,10 +158,10 @@ public class PerfectDapComboHandler {
                     s.count++;
                     closeFusionBar(p1, p2, s);
                     String msg = comboMessage(s.count);
-                    p1.displayClientMessage(net.minecraft.network.chat.Component.literal(msg), true);
-                    p2.displayClientMessage(net.minecraft.network.chat.Component.literal(msg), true);
+                    com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal(msg), true);
+                    com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal(msg), true);
                     Vec3 mid = p1.position().add(p2.position()).scale(0.5);
-                    p1.serverLevel().playSound(null, mid.x, mid.y, mid.z,
+                    p1.level().playSound(null, mid.x, mid.y, mid.z,
                             ModSounds.DAP_HIT, SoundSource.PLAYERS,
                             Math.min(1.5f, 0.9f + s.count * 0.04f),
                             Math.min(2.0f, 1.0f + s.count * 0.07f));
@@ -186,7 +186,7 @@ public class PerfectDapComboHandler {
                         p1.hurtMarked = true;
                         p2.hurtMarked = true;
                         Vec3 mid2 = p1.position().add(p2.position()).scale(0.5).add(0, 1, 0);
-                        p1.serverLevel().sendParticles(ParticleTypes.ANGRY_VILLAGER,
+                        p1.level().sendParticles(ParticleTypes.ANGRY_VILLAGER,
                                 mid2.x, mid2.y, mid2.z, 6, 0.3, 0.3, 0.3, 0.05);
                     }
                     failCombo(s, server, misser);
@@ -232,7 +232,7 @@ public class PerfectDapComboHandler {
                 s.p1, s.button, centerInt, halfWidthMs, -periodMs, true, 2));
         ServerPlayNetworking.send(p2, new DapFusionHandler.FusionQTEPayload(
                 s.p2, s.button, centerInt, halfWidthMs, -periodMs, true, 2));
-        p1.serverLevel().playSound(null, s.pos.x, s.pos.y, s.pos.z,
+        p1.level().playSound(null, s.pos.x, s.pos.y, s.pos.z,
                 SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.PLAYERS, 1.0f,
                 Math.min(2.0f, 1.5f + s.count * 0.06f));
     }
@@ -249,14 +249,14 @@ public class PerfectDapComboHandler {
         String failMsg  = "§c✗ You missed! (Combo x" + s.count + ")";
         String otherMsg = "§c✗ Partner missed! (Combo x" + s.count + ")";
         if (misserId == null) {
-            if (p1 != null) p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§c✗ Too slow! (Combo x" + s.count + ")"), true);
-            if (p2 != null) p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§c✗ Too slow! (Combo x" + s.count + ")"), true);
+            if (p1 != null) com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§c✗ Too slow! (Combo x" + s.count + ")"), true);
+            if (p2 != null) com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§c✗ Too slow! (Combo x" + s.count + ")"), true);
         } else {
             ServerPlayer misser = server.getPlayerList().getPlayer(misserId);
             UUID otherId = misserId.equals(s.p1) ? s.p2 : s.p1;
             ServerPlayer other = server.getPlayerList().getPlayer(otherId);
-            if (misser != null) misser.displayClientMessage(net.minecraft.network.chat.Component.literal(failMsg), true);
-            if (other  != null) other.displayClientMessage(net.minecraft.network.chat.Component.literal(otherMsg), true);
+            if (misser != null) com.cooptest.neoforge.PlayerActions.message(misser, net.minecraft.network.chat.Component.literal(failMsg), true);
+            if (other  != null) com.cooptest.neoforge.PlayerActions.message(other, net.minecraft.network.chat.Component.literal(otherMsg), true);
         }
         new java.util.Timer().schedule(new java.util.TimerTask() {
             @Override public void run() {
@@ -273,14 +273,14 @@ public class PerfectDapComboHandler {
     }
     private static void fireImpact(ServerPlayer p1, ServerPlayer p2,
                                    ComboSession s, boolean isSecond) {
-        ServerLevel world = p1.serverLevel();
+        ServerLevel world = p1.level();
         Vec3 pos = s.pos;
         int c = Math.min(s.count, 30);
         float pitch = Math.min(2.0f, 1.0f + c * 0.07f);
         float vol   = Math.min(1.5f, 0.9f + c * 0.04f);
         if (c >= 5 && isSecond) {
             net.minecraft.world.entity.LightningBolt bolt = new net.minecraft.world.entity.LightningBolt(
-                    net.minecraft.world.entity.EntityType.LIGHTNING_BOLT, world);
+                    net.minecraft.world.entity.EntityTypes.LIGHTNING_BOLT, world);
             bolt.setPosRaw(pos.x, pos.y, pos.z);
             bolt.setVisualOnly(true);
             world.addFreshEntity(bolt);
@@ -305,12 +305,12 @@ public class PerfectDapComboHandler {
         } else if (c <= 7) {
             world.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, pos.x, pos.y, pos.z, 16 + c * 3, 0.4, 0.4, 0.4, 0.18);
             world.sendParticles(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 8 + c, 0.3, 0.3, 0.3, 0.08);
-            if (isSecond) world.sendParticles(ParticleTypes.FLASH, pos.x, pos.y, pos.z, 1, 0, 0, 0, 0);
+            if (isSecond) world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF), pos.x, pos.y, pos.z, 1, 0, 0, 0, 0);
             world.playSound(null, pos.x, pos.y, pos.z, ModSounds.IMPACT, SoundSource.PLAYERS, vol * 0.9f, pitch);
         } else {
             world.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, pos.x, pos.y, pos.z, 25 + c * 4, 0.5, 0.5, 0.5, 0.22);
             world.sendParticles(ParticleTypes.EXPLOSION_EMITTER, pos.x, pos.y, pos.z, 2, 0.2, 0.2, 0.2, 0);
-            world.sendParticles(ParticleTypes.FLASH, pos.x, pos.y, pos.z, 2, 0.1, 0.1, 0.1, 0);
+            world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF), pos.x, pos.y, pos.z, 2, 0.1, 0.1, 0.1, 0);
             world.sendParticles(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 12 + c * 2, 0.4, 0.4, 0.4, 0.12);
             world.playSound(null, pos.x, pos.y, pos.z, ModSounds.EPIC_DAP, SoundSource.PLAYERS, vol, pitch);
             world.playSound(null, pos.x, pos.y, pos.z, ModSounds.EXPLOSION_IMPACT, SoundSource.PLAYERS, 0.6f, pitch * 0.8f);
@@ -325,7 +325,7 @@ public class PerfectDapComboHandler {
                 s.p1, s.button, centerInt, halfWidthMs, periodMs, true, 2));
         ServerPlayNetworking.send(p2, new DapFusionHandler.FusionQTEPayload(
                 s.p2, s.button, centerInt, halfWidthMs, periodMs, true, 2));
-        p1.serverLevel().playSound(null, s.pos.x, s.pos.y, s.pos.z,
+        p1.level().playSound(null, s.pos.x, s.pos.y, s.pos.z,
                 SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.PLAYERS, 0.9f,
                 Math.min(2.0f, 1.4f + s.count * 0.05f));
     }

@@ -124,7 +124,7 @@ public class HighFiveQTEHugHandler {
         for (ServerPlayer p : List.of(p1, p2)) {
             var swing = new net.minecraft.network.protocol.game.ClientboundAnimatePacket(
                     p, net.minecraft.network.protocol.game.ClientboundAnimatePacket.SWING_MAIN_HAND);
-            for (ServerPlayer obs : p.serverLevel().players())
+            for (ServerPlayer obs : p.level().players())
                 if (!obs.getUUID().equals(p.getUUID())) obs.connection.send(swing);
         }
     }
@@ -145,7 +145,7 @@ public class HighFiveQTEHugHandler {
                 continue;
             }
             s.tick++;
-            ServerLevel world = p1.serverLevel();
+            ServerLevel world = p1.level();
             if (s.tick == TICK_RIGHT_PARTICLES) {
                 for (ServerPlayer p : List.of(p1, p2)) {
                     Vec3 arm = getRightArmTip(p);
@@ -223,8 +223,8 @@ public class HighFiveQTEHugHandler {
         Vec3 mid  = pos1.add(pos2).scale(0.5);
         Vec3 t1   = mid.subtract(dir.scale(targetDist / 2.0));
         Vec3 t2   = mid.add(dir.scale(targetDist / 2.0));
-        p1.teleportTo(p1.serverLevel(), t1.x, t1.y, t1.z, p1.getYRot(), p1.getXRot());
-        p2.teleportTo(p2.serverLevel(), t2.x, t2.y, t2.z, p2.getYRot(), p2.getXRot());
+        com.cooptest.neoforge.PlayerActions.teleport(p1, p1.level(), t1.x, t1.y, t1.z, p1.getYRot(), p1.getXRot());
+        com.cooptest.neoforge.PlayerActions.teleport(p2, p2.level(), t2.x, t2.y, t2.z, p2.getYRot(), p2.getXRot());
         s.p1BasePos = t1; s.p2BasePos = t2;
     }
     private static void playLeftArmFX(ServerPlayer p1, ServerPlayer p2, ServerLevel world) {
@@ -237,7 +237,7 @@ public class HighFiveQTEHugHandler {
         for (ServerPlayer p : List.of(p1, p2)) {
             var swing = new net.minecraft.network.protocol.game.ClientboundAnimatePacket(
                     p, net.minecraft.network.protocol.game.ClientboundAnimatePacket.SWING_MAIN_HAND);
-            for (ServerPlayer obs : p.serverLevel().players())
+            for (ServerPlayer obs : p.level().players())
                 if (!obs.getUUID().equals(p.getUUID())) obs.connection.send(swing);
         }
     }

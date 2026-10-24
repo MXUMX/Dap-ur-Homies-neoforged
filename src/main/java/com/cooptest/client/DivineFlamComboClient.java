@@ -19,7 +19,7 @@ public class DivineFlamComboClient {
                 "key.cooptest.divine_flame",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_J,
-                "category.cooptest"
+                net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper.CATEGORY
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {

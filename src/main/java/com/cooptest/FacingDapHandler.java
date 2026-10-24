@@ -58,7 +58,7 @@ public class FacingDapHandler {
         FacingSession s = new FacingSession(id1, id2);
         sessions.put(id1, s);
         sessions.put(id2, s);
-        ServerLevel world = p1.serverLevel();
+        ServerLevel world = p1.level();
         Vec3 mid = p1.position().add(p2.position()).scale(0.5);
         Vec3 flatDir = p2.position().subtract(p1.position());
         flatDir = new Vec3(flatDir.x, 0, flatDir.z).normalize();
@@ -66,8 +66,8 @@ public class FacingDapHandler {
         Vec3 startPos2 = mid.add(flatDir.scale(START_DIST * 0.5));
         float yaw1 = (float)(-Math.toDegrees(Math.atan2(flatDir.x, flatDir.z)));
         float yaw2 = yaw1 + 180f;
-        p1.teleportTo(world, startPos1.x, p1.getY(), startPos1.z, java.util.Set.of(), yaw1, 0);
-        p2.teleportTo(world, startPos2.x, p2.getY(), startPos2.z, java.util.Set.of(), yaw2, 0);
+        com.cooptest.neoforge.PlayerActions.teleport(p1, world, startPos1.x, p1.getY(), startPos1.z, java.util.Set.of(), yaw1, 0);
+        com.cooptest.neoforge.PlayerActions.teleport(p2, world, startPos2.x, p2.getY(), startPos2.z, java.util.Set.of(), yaw2, 0);
         PoseNetworking.broadcastAnimState(p1, ANIM_P1);
         PoseNetworking.broadcastAnimState(p2, ANIM_P2);
         ServerPlayNetworking.send(p1, new ChargedDapHandler.PerfectDapFreezePayload(true));
@@ -89,7 +89,7 @@ public class FacingDapHandler {
         ServerPlayer p2 = server.getPlayerList().getPlayer(s.p2);
         if (p1 == null || p2 == null) { cleanup(s); return; }
         long elapsed = s.elapsed();
-        ServerLevel world = p1.serverLevel();
+        ServerLevel world = p1.level();
         if (elapsed <= APPROACH_MS) {
             double t = (double) elapsed / APPROACH_MS;
             double currentDist = START_DIST + (TARGET_DIST - START_DIST) * t;
@@ -99,8 +99,8 @@ public class FacingDapHandler {
             double halfDist = currentDist * 0.5;
             Vec3 np1 = mid2.subtract(fd.scale(halfDist));
             Vec3 np2 = mid2.add(fd.scale(halfDist));
-            p1.teleportTo(world, np1.x, p1.getY(), np1.z, java.util.Set.of(), p1.getYRot(), 0);
-            p2.teleportTo(world, np2.x, p2.getY(), np2.z, java.util.Set.of(), p2.getYRot(), 0);
+            com.cooptest.neoforge.PlayerActions.teleport(p1, world, np1.x, p1.getY(), np1.z, java.util.Set.of(), p1.getYRot(), 0);
+            com.cooptest.neoforge.PlayerActions.teleport(p2, world, np2.x, p2.getY(), np2.z, java.util.Set.of(), p2.getYRot(), 0);
         }
         if (!s.impactFired && elapsed >= IMPACT_MS) {
             s.impactFired = true;
@@ -108,7 +108,7 @@ public class FacingDapHandler {
             Vec3 mid = p1.position().add(p2.position()).scale(0.5).add(0, 1.2, 0);
             world.sendParticles(ParticleTypes.CRIT,          mid.x, mid.y, mid.z, 20, 0.4, 0.4, 0.4, 0.15);
             world.sendParticles(ParticleTypes.ENCHANTED_HIT, mid.x, mid.y, mid.z, 15, 0.3, 0.3, 0.3, 0.12);
-            world.sendParticles(ParticleTypes.FLASH,         mid.x, mid.y, mid.z,  2,   0,   0,   0,    0);
+            world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF),         mid.x, mid.y, mid.z,  2,   0,   0,   0,    0);
             world.sendParticles(ParticleTypes.END_ROD,       mid.x, mid.y, mid.z, 12, 0.3, 0.3, 0.3, 0.10);
         }
         if (!s.impactFrameFired && elapsed >= IMPACT_FRAME_MS) {
@@ -130,7 +130,7 @@ public class FacingDapHandler {
                             px, mid.y, pz, 1, 0, 0.05, 0, 0.01);
                 }
             }
-            world.sendParticles(ParticleTypes.FLASH, mid.x, mid.y, mid.z, 3, 0.05, 0.05, 0.05, 0);
+            world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF), mid.x, mid.y, mid.z, 3, 0.05, 0.05, 0.05, 0);
             world.sendParticles(ParticleTypes.EXPLOSION_EMITTER, mid.x, mid.y, mid.z, 1, 0, 0, 0, 0);
             ServerPlayNetworking.send(p1, new ChargedDapHandler.FacingDapImpactPayload());
             ServerPlayNetworking.send(p2, new ChargedDapHandler.FacingDapImpactPayload());

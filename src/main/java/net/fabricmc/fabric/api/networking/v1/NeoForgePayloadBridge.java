@@ -67,7 +67,8 @@ public final class NeoForgePayloadBridge {
     private static <T extends CustomPacketPayload> void registerEntry(PayloadRegistrar registrar, Entry<T> entry) {
         StreamCodec<? super RegistryFriendlyByteBuf, T> codec = (StreamCodec) entry.codec;
         if (entry.serverbound && entry.clientbound) {
-            registrar.playBidirectional(entry.id, codec, NeoForgePayloadBridge::handleBidirectional);
+            registrar.playBidirectional(entry.id, codec, NeoForgePayloadBridge::handleServerbound,
+                    NeoForgePayloadBridge::handleClientbound);
         } else if (entry.serverbound) {
             registrar.playToServer(entry.id, codec, NeoForgePayloadBridge::handleServerbound);
         } else if (entry.clientbound) {
@@ -80,15 +81,7 @@ public final class NeoForgePayloadBridge {
         ServerPlayNetworking.PlayPayloadHandler<T> handler =
                 (ServerPlayNetworking.PlayPayloadHandler<T>) SERVER_RECEIVERS.get(payload.type());
         if (handler != null && context.player() instanceof ServerPlayer player) {
-            handler.receive(payload, new ServerPlayNetworking.Context(player, player.getServer(), context));
-        }
-    }
-
-    private static <T extends CustomPacketPayload> void handleBidirectional(T payload, IPayloadContext context) {
-        if (context.player() instanceof ServerPlayer) {
-            handleServerbound(payload, context);
-        } else {
-            handleClientbound(payload, context);
+            handler.receive(payload, new ServerPlayNetworking.Context(player, player.level().getServer(), context));
         }
     }
 

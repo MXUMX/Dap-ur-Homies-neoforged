@@ -11,16 +11,16 @@ import net.minecraft.world.phys.Vec3;
 import com.cooptest.client.CoopAnimationHandler;
 import java.util.*;
 public class NormalFacingDapHandler {
-    public static final net.minecraft.resources.ResourceLocation LOOP_HOLD_ID =
-            net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("cooptest", "dap_loop_hold");
+    public static final net.minecraft.resources.Identifier LOOP_HOLD_ID =
+            net.minecraft.resources.Identifier.fromNamespaceAndPath("cooptest", "dap_loop_hold");
     public record DapLoopHoldPayload() implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
         public static final Type<DapLoopHoldPayload> ID = new Type<>(LOOP_HOLD_ID);
         public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.FriendlyByteBuf, DapLoopHoldPayload> CODEC =
                 net.minecraft.network.codec.StreamCodec.unit(new DapLoopHoldPayload());
         @Override public Type<? extends net.minecraft.network.protocol.common.custom.CustomPacketPayload> type() { return ID; }
     }
-    public static final net.minecraft.resources.ResourceLocation SESSION_STATE_ID =
-            net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("cooptest", "face_dap_session");
+    public static final net.minecraft.resources.Identifier SESSION_STATE_ID =
+            net.minecraft.resources.Identifier.fromNamespaceAndPath("cooptest", "face_dap_session");
     public record FaceDapSessionPayload(boolean active) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
         public static final Type<FaceDapSessionPayload> ID = new Type<>(SESSION_STATE_ID);
         public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.FriendlyByteBuf, FaceDapSessionPayload> CODEC =
@@ -100,13 +100,13 @@ public class NormalFacingDapHandler {
         });
         net.fabricmc.fabric.api.event.player.UseEntityCallback.EVENT.register(
                 (player, world, hand, entity, hitResult) -> {
-                    if (world.isClientSide) return net.minecraft.world.InteractionResult.PASS;
+                    if (world.isClientSide()) return net.minecraft.world.InteractionResult.PASS;
                     if (!(player instanceof ServerPlayer sp)) return net.minecraft.world.InteractionResult.PASS;
                     if (!(entity instanceof ServerPlayer target)) return net.minecraft.world.InteractionResult.PASS;
                     if (sp.isShiftKeyDown()) return net.minecraft.world.InteractionResult.PASS;
                     if (Boolean.TRUE.equals(inLoop.get(sp.getUUID()))) {
                         UUID partner = activeSessions.get(sp.getUUID());
-                        if (partner != null) endLoop(sp.getServer(), sp.getUUID(), partner);
+                        if (partner != null) endLoop(sp.level().getServer(), sp.getUUID(), partner);
                         return net.minecraft.world.InteractionResult.SUCCESS;
                     }
                     return net.minecraft.world.InteractionResult.PASS;
@@ -116,7 +116,7 @@ public class NormalFacingDapHandler {
         UUID sid = sp.getUUID(), tid = target.getUUID();
         clickMap.put(sid, tid);
         clickTime.put(sid, System.currentTimeMillis());
-        sp.displayClientMessage(net.minecraft.network.chat.Component.literal("§e✦ Waiting for homie..."), true);
+        com.cooptest.neoforge.PlayerActions.message(sp, net.minecraft.network.chat.Component.literal("§e✦ Waiting for homie..."), true);
     }
     public static boolean isConfirmed(UUID id1, UUID id2) {
         long now = System.currentTimeMillis();
@@ -141,7 +141,7 @@ public class NormalFacingDapHandler {
         loopCount.put(k, 0);
         sessionStart.put(k, System.currentTimeMillis());
         canonicalP1.put(k, id1);
-        MinecraftServer server = p1.getServer();
+        MinecraftServer server = p1.level().getServer();
         if (server == null) return;
         Vec3 diff = p2.position().subtract(p1.position());
         Vec3 flat = new Vec3(diff.x, 0, diff.z).normalize();
@@ -150,8 +150,8 @@ public class NormalFacingDapHandler {
         Vec3 pos2 = mid.add(flat.scale(FACE_DIST * 0.5));
         float yaw1 = (float) Math.toDegrees(Math.atan2(-flat.x, flat.z));
         float yaw2 = yaw1 + 180f;
-        p1.teleportTo(p1.serverLevel(), pos1.x, p1.getY(), pos1.z, java.util.Set.of(), yaw1, p1.getXRot());
-        p2.teleportTo(p2.serverLevel(), pos2.x, p2.getY(), pos2.z, java.util.Set.of(), yaw2, p2.getXRot());
+        com.cooptest.neoforge.PlayerActions.teleport(p1, p1.level(), pos1.x, p1.getY(), pos1.z, java.util.Set.of(), yaw1, p1.getXRot());
+        com.cooptest.neoforge.PlayerActions.teleport(p2, p2.level(), pos2.x, p2.getY(), pos2.z, java.util.Set.of(), yaw2, p2.getXRot());
         p1.setYRot(yaw1); p1.setYBodyRot(yaw1); p1.setYHeadRot(yaw1);
         p2.setYRot(yaw2); p2.setYBodyRot(yaw2); p2.setYHeadRot(yaw2);
         p1.swing(net.minecraft.world.InteractionHand.MAIN_HAND, true);
@@ -166,13 +166,13 @@ public class NormalFacingDapHandler {
             ServerPlayer a = server.getPlayerList().getPlayer(id1);
             ServerPlayer b = server.getPlayerList().getPlayer(id2);
             if (a == null || b == null) return;
-            ServerLevel w = a.serverLevel();
+            ServerLevel w = a.level();
             Vec3 m = a.position().add(b.position()).scale(0.5).add(0, 1.3, 0);
             w.playSound(null, m.x, m.y, m.z, ModSounds.DAP_HIT, SoundSource.PLAYERS, 1.5f, 1.0f);
             w.playSound(null, m.x, m.y, m.z, SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1.0f, 1.2f);
             w.sendParticles(ParticleTypes.CRIT, m.x, m.y, m.z, 12, 0.2, 0.2, 0.2, 0.1);
             w.sendParticles(ParticleTypes.ENCHANTED_HIT, m.x, m.y, m.z, 6, 0.15, 0.15, 0.15, 0.07);
-            w.sendParticles(ParticleTypes.FLASH, m.x, m.y, m.z, 2, 0, 0, 0, 0);
+            w.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF), m.x, m.y, m.z, 2, 0, 0, 0, 0);
         });
         long[] punches = {1333, 1417, 1583, 1667, 1833, 2000, 2167};
         for (long t : punches) {
@@ -181,8 +181,8 @@ public class NormalFacingDapHandler {
                 ServerPlayer b = server.getPlayerList().getPlayer(id2);
                 if (a == null || b == null) return;
                 Vec3 m = a.position().add(b.position()).scale(0.5).add(0, 1.3, 0);
-                a.serverLevel().sendParticles(ParticleTypes.CRIT, m.x, m.y, m.z, 3, 0.1, 0.1, 0.1, 0.06);
-                a.serverLevel().playSound(null, m.x, m.y, m.z,
+                a.level().sendParticles(ParticleTypes.CRIT, m.x, m.y, m.z, 3, 0.1, 0.1, 0.1, 0.06);
+                a.level().playSound(null, m.x, m.y, m.z,
                         SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.PLAYERS, 0.7f, 1.0f + (float)(Math.random() * 0.3));
             });
         }
@@ -219,16 +219,16 @@ public class NormalFacingDapHandler {
         ServerPlayer a = server.getPlayerList().getPlayer(id1);
         ServerPlayer b = server.getPlayerList().getPlayer(id2);
         if (a == null || b == null) { endLoop(server, id1, id2); return; }
-        ServerLevel w = a.serverLevel();
+        ServerLevel w = a.level();
         Vec3 m = a.position().add(b.position()).scale(0.5).add(0, 1.3, 0);
         Long ls = loopStartTime.get(k);
         long sec = ls != null ? (now - ls) / 1000L : 0;
-        a.displayClientMessage(net.minecraft.network.chat.Component.literal("§e⚡ " + count + " §f" + sec + "s"), true);
-        b.displayClientMessage(net.minecraft.network.chat.Component.literal("§e⚡ " + count + " §f" + sec + "s"), true);
+        com.cooptest.neoforge.PlayerActions.message(a, net.minecraft.network.chat.Component.literal("§e⚡ " + count + " §f" + sec + "s"), true);
+        com.cooptest.neoforge.PlayerActions.message(b, net.minecraft.network.chat.Component.literal("§e⚡ " + count + " §f" + sec + "s"), true);
         w.playSound(null, m.x, m.y, m.z, ModSounds.DAP_HIT, SoundSource.PLAYERS, 1.0f + Math.min(count * 0.03f, 0.5f), 1.0f);
         w.sendParticles(ParticleTypes.CRIT, m.x, m.y, m.z, 4 + Math.min(count, 20), 0.2, 0.2, 0.2, 0.05);
         if (count >= 9)  w.sendParticles(ParticleTypes.END_ROD, m.x, m.y, m.z, count, 0.5, 0.3, 0.5, 0.05);
-        if (count >= 25 && count % 4 == 0) { var l = new net.minecraft.world.entity.LightningBolt(net.minecraft.world.entity.EntityType.LIGHTNING_BOLT, w); l.setPosRaw(m.x, m.y, m.z); l.setVisualOnly(true); w.addFreshEntity(l); }
+        if (count >= 25 && count % 4 == 0) { var l = new net.minecraft.world.entity.LightningBolt(net.minecraft.world.entity.EntityTypes.LIGHTNING_BOLT, w); l.setPosRaw(m.x, m.y, m.z); l.setVisualOnly(true); w.addFreshEntity(l); }
         if (count >= 480) endLoop(server, id1, id2);
     }
     private static void endLoop(MinecraftServer server, UUID id1, UUID id2) {

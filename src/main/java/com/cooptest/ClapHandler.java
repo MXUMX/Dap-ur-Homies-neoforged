@@ -6,7 +6,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -36,7 +36,7 @@ public class ClapHandler {
         }
     }
     public record ClapRequestPayload() implements CustomPacketPayload {
-        public static final ResourceLocation ID_LOC = ResourceLocation.fromNamespaceAndPath("cooptest", "clap_request");
+        public static final Identifier ID_LOC = Identifier.fromNamespaceAndPath("cooptest", "clap_request");
         public static final Type<ClapRequestPayload> ID = new Type<>(ID_LOC);
         public static final StreamCodec<FriendlyByteBuf, ClapRequestPayload> CODEC =
                 StreamCodec.ofMember((p, buf) -> {}, buf -> new ClapRequestPayload());
@@ -74,7 +74,7 @@ public class ClapHandler {
         PoseNetworking.broadcastAnimState(player, animState.ordinal());
         if (tier == 2) {
             net.minecraft.world.phys.AABB fearBox = player.getBoundingBox().inflate(15.0);
-            player.serverLevel().getEntitiesOfClass(
+            player.level().getEntitiesOfClass(
                     net.minecraft.world.entity.animal.Animal.class, fearBox,
                     a -> !a.isRemoved()
             ).forEach(animal -> {
@@ -92,7 +92,7 @@ public class ClapHandler {
             });
         }
         boolean isSync = false;
-        for (ServerPlayer other : player.getServer().getPlayerList().getPlayers()) {
+        for (ServerPlayer other : player.level().getServer().getPlayerList().getPlayers()) {
             if (other == player) continue;
             Long otherLast = lastPressTime.get(other.getUUID());
             if (otherLast == null || now - otherLast > SYNC_WINDOW_MS) continue;
@@ -105,7 +105,7 @@ public class ClapHandler {
             case 2 -> IMPACT_TICKS_FAST;
             default -> IMPACT_TICKS_SLOW;
         };
-        scheduled.add(new ScheduledEffect(player.serverLevel(), armTip, isSync, tier, delay));
+        scheduled.add(new ScheduledEffect(player.level(), armTip, isSync, tier, delay));
     }
     private static void tick(MinecraftServer server) {
         Iterator<ScheduledEffect> it = scheduled.iterator();

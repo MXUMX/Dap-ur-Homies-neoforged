@@ -6,7 +6,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -88,7 +88,7 @@ public class HuddleHandler {
     }
     public record HuddleFHoldPayload(boolean holding) implements CustomPacketPayload {
         public static final Type<HuddleFHoldPayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("testcoop", "huddle_f_hold"));
+                new Type<>(Identifier.fromNamespaceAndPath("testcoop", "huddle_f_hold"));
         public static final StreamCodec<FriendlyByteBuf, HuddleFHoldPayload> CODEC =
                 StreamCodec.ofMember((val, buf) -> buf.writeBoolean(val.holding()),
                         buf -> new HuddleFHoldPayload(buf.readBoolean()));
@@ -96,7 +96,7 @@ public class HuddleHandler {
     }
     public record HuddleEndPayload(UUID p1, UUID p2, boolean success) implements CustomPacketPayload {
         public static final Type<HuddleEndPayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("testcoop", "huddle_end_result"));
+                new Type<>(Identifier.fromNamespaceAndPath("testcoop", "huddle_end_result"));
         public static final StreamCodec<FriendlyByteBuf, HuddleEndPayload> CODEC =
                 StreamCodec.ofMember(
                         (val, buf) -> { buf.writeUUID(val.p1()); buf.writeUUID(val.p2()); buf.writeBoolean(val.success()); },
@@ -149,13 +149,13 @@ public class HuddleHandler {
             return false;
         }
         if ("FAIL".equals(button)) {
-            failHuddle(s, player.getServer());
+            failHuddle(s, player.level().getServer());
             return true;
         }
         if (!"G".equals(button) && !"H".equals(button)) return false;
         String expected = s.expectedButton();
         if (!button.equals(expected)) {
-            failHuddle(s, player.getServer());
+            failHuddle(s, player.level().getServer());
             return true;
         }
         if (id.equals(s.p1)) s.qteHits.add(s.p1);
@@ -224,7 +224,7 @@ public class HuddleHandler {
                             @Override public void run() {
                                 server.execute(() -> {
                                     if (!pj.isAlive()) return;
-                                    pj.teleportTo(pj.serverLevel(), stepX, pj.getY(), stepZ,
+                                    com.cooptest.neoforge.PlayerActions.teleport(pj, pj.level(), stepX, pj.getY(), stepZ,
                                             java.util.Set.of(), fYaw, 0);
                                     if (frac >= 1.0) {
                                         pj.setYRot(fYaw); pj.setYBodyRot(fYaw); pj.setYHeadRot(fYaw);
@@ -271,24 +271,24 @@ public class HuddleHandler {
                             if (!fpj.isAlive()) return;
                             Vec3 arm = fpj.position().add(0, 1.4, 0)
                                     .add(fpj.getViewVector(1.0f).scale(0.4));
-                            fpj.serverLevel().sendParticles(ParticleTypes.CRIT,
+                            fpj.level().sendParticles(ParticleTypes.CRIT,
                                     arm.x, arm.y, arm.z, 6, 0.08, 0.08, 0.08, 0.06);
-                            fpj.serverLevel().sendParticles(ParticleTypes.ENCHANTED_HIT,
+                            fpj.level().sendParticles(ParticleTypes.ENCHANTED_HIT,
                                     arm.x, arm.y, arm.z, 4, 0.06, 0.06, 0.06, 0.04);
-                            fpj.serverLevel().playSound(null, arm.x, arm.y, arm.z,
+                            fpj.level().playSound(null, arm.x, arm.y, arm.z,
                                     SoundEvents.NOTE_BLOCK_BELL.value(),
                                     SoundSource.PLAYERS, 0.8f, 2.0f);
                         });
                     }
                 }, 420L);
                 Vec3 sPos = stand.position();
-                pj.serverLevel().playSound(null, sPos.x, sPos.y, sPos.z,
+                pj.level().playSound(null, sPos.x, sPos.y, sPos.z,
                         SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.PLAYERS, 1.0f, 1.7f);
-                pj.displayClientMessage(net.minecraft.network.chat.Component.literal("§aYou joined the huddle!"), true);
+                com.cooptest.neoforge.PlayerActions.message(pj, net.minecraft.network.chat.Component.literal("§aYou joined the huddle!"), true);
                 for (UUID pid : s.players) {
                     if (pid.equals(joiner)) continue;
                     ServerPlayer pp = server.getPlayerList().getPlayer(pid);
-                    if (pp != null) pp.displayClientMessage(
+                    if (pp != null) com.cooptest.neoforge.PlayerActions.message(pp,
                             net.minecraft.network.chat.Component.literal("§a" + pj.getName().getString() + " joined the huddle!"), true);
                 }
                 break;
@@ -326,7 +326,7 @@ public class HuddleHandler {
                                               ServerPlayer pa, ServerPlayer pb,
                                               MinecraftServer server) {
         Vec3 mid = pa.position().add(pb.position()).scale(0.5);
-        net.minecraft.server.level.ServerLevel world = pa.serverLevel();
+        net.minecraft.server.level.ServerLevel world = pa.level();
         net.minecraft.world.entity.decoration.ArmorStand stand =
                 new net.minecraft.world.entity.decoration.ArmorStand(world, mid.x, mid.y, mid.z);
         stand.setInvisible(true);
@@ -346,9 +346,9 @@ public class HuddleHandler {
         final List<UUID> foundersSnap = new java.util.ArrayList<>(s.players);
         new java.util.Timer().schedule(new java.util.TimerTask() {
             @Override public void run() {
-                pa.getServer().execute(() -> {
+                pa.level().getServer().execute(() -> {
                     for (UUID uid : foundersSnap) {
-                        ServerPlayer p = pa.getServer().getPlayerList().getPlayer(uid);
+                        ServerPlayer p = pa.level().getServer().getPlayerList().getPlayer(uid);
                         if (p != null) p.swing(net.minecraft.world.InteractionHand.MAIN_HAND, true);
                     }
                 });
@@ -356,9 +356,9 @@ public class HuddleHandler {
         }, 120L);
         new java.util.Timer().schedule(new java.util.TimerTask() {
             @Override public void run() {
-                pa.getServer().execute(() -> {
+                pa.level().getServer().execute(() -> {
                     for (UUID uid : foundersSnap) {
-                        ServerPlayer p = pa.getServer().getPlayerList().getPlayer(uid);
+                        ServerPlayer p = pa.level().getServer().getPlayerList().getPlayer(uid);
                         if (p != null) p.swing(net.minecraft.world.InteractionHand.MAIN_HAND, true);
                     }
                 });
@@ -389,7 +389,7 @@ public class HuddleHandler {
             double px = center.x + HUDDLE_RADIUS * Math.cos(angle);
             double pz = center.z + HUDDLE_RADIUS * Math.sin(angle);
             float yaw = (float)(-Math.toDegrees(Math.atan2(center.x - px, center.z - pz)));
-            p.teleportTo(p.serverLevel(), px, p.getY(), pz, java.util.Set.of(), yaw, 0);
+            com.cooptest.neoforge.PlayerActions.teleport(p, p.level(), px, p.getY(), pz, java.util.Set.of(), yaw, 0);
             p.setYRot(yaw); p.setYBodyRot(yaw); p.setYHeadRot(yaw);
         }
     }
@@ -423,7 +423,7 @@ public class HuddleHandler {
                         double a = s.auraAngle + (Math.PI / 2 * i);
                         double px = center.x + r * Math.cos(a);
                         double pz = center.z + r * Math.sin(a);
-                        p1.serverLevel().sendParticles(ParticleTypes.END_ROD,
+                        p1.level().sendParticles(ParticleTypes.END_ROD,
                                 px, center.y + 0.05, pz, 1, 0, 0, 0, 0.01);
                     }
                     double r2 = 0.7;
@@ -431,7 +431,7 @@ public class HuddleHandler {
                         double a = -s.auraAngle * 1.5 + (Math.PI * 2 / 3 * i);
                         double px = center.x + r2 * Math.cos(a);
                         double pz = center.z + r2 * Math.sin(a);
-                        p1.serverLevel().sendParticles(ParticleTypes.ENCHANTED_HIT,
+                        p1.level().sendParticles(ParticleTypes.ENCHANTED_HIT,
                                 px, center.y + 0.3, pz, 1, 0, 0, 0, 0.005);
                     }
                 }
@@ -439,22 +439,22 @@ public class HuddleHandler {
                     if (s.firstRelease == null) {
                         s.firstRelease = now;
                         Vec3 alertMid = p1.position().add(p2.position()).scale(0.5).add(0, 1, 0);
-                        p1.serverLevel().playSound(null, alertMid.x, alertMid.y, alertMid.z,
+                        p1.level().playSound(null, alertMid.x, alertMid.y, alertMid.z,
                                 SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.PLAYERS, 1.2f, 1.8f);
-                        p1.serverLevel().sendParticles(ParticleTypes.NOTE,
+                        p1.level().sendParticles(ParticleTypes.NOTE,
                                 alertMid.x, alertMid.y + 0.5, alertMid.z, 5, 0.3, 0.2, 0.3, 0.1);
                     }
                     boolean bothReleased = s.holdsF.isEmpty();
                     boolean graceExpired = (now - s.firstRelease) > F_RELEASE_GRACE_MS;
                     if (bothReleased) {
                         Vec3 mid = p1.position().add(p2.position()).scale(0.5).add(0, 1, 0);
-                        p1.serverLevel().playSound(null, mid.x, mid.y, mid.z,
+                        p1.level().playSound(null, mid.x, mid.y, mid.z,
                                 SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1.0f, 1.3f);
-                        p1.serverLevel().playSound(null, mid.x, mid.y, mid.z,
+                        p1.level().playSound(null, mid.x, mid.y, mid.z,
                                 ModSounds.DAP_HIT, SoundSource.PLAYERS, 0.9f, 1.4f);
-                        p1.serverLevel().sendParticles(ParticleTypes.CRIT,
+                        p1.level().sendParticles(ParticleTypes.CRIT,
                                 mid.x, mid.y, mid.z, 12, 0.25, 0.25, 0.25, 0.1);
-                        p1.serverLevel().sendParticles(ParticleTypes.ENCHANTED_HIT,
+                        p1.level().sendParticles(ParticleTypes.ENCHANTED_HIT,
                                 mid.x, mid.y, mid.z, 6, 0.2, 0.2, 0.2, 0.06);
                         startQTEStep(s, server, p1, p2, now);
                     } else if (graceExpired) {
@@ -476,7 +476,7 @@ public class HuddleHandler {
                                 lp.getUUID(), btn, s.qteStep, 0L, QTE_WINDOW_MS, true, 0));
                     }
                     Vec3 mid = p1.position().add(p2.position()).scale(0.5);
-                    p1.serverLevel().playSound(null, mid.x, mid.y, mid.z,
+                    p1.level().playSound(null, mid.x, mid.y, mid.z,
                             SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.PLAYERS,
                             0.9f, 1.4f + s.qteStep * 0.1f);
                 }
@@ -485,15 +485,15 @@ public class HuddleHandler {
                     s.stepsHit++;
                     for (ServerPlayer lp : live) {
                         lp.addEffect(new MobEffectInstance(
-                                MobEffects.MOVEMENT_SPEED, 400, s.stepsHit, false, true));
+                                MobEffects.SPEED, 400, s.stepsHit, false, true));
                         lp.addEffect(new MobEffectInstance(
-                                MobEffects.DAMAGE_BOOST, 400, s.stepsHit - 1, false, true));
+                                MobEffects.STRENGTH, 400, s.stepsHit - 1, false, true));
                     }
                     Vec3 flashMid = p1.position().add(p2.position()).scale(0.5).add(0, 1, 0);
                     int flashCount = 4 + s.stepsHit * 4;
-                    p1.serverLevel().sendParticles(ParticleTypes.TOTEM_OF_UNDYING,
+                    p1.level().sendParticles(ParticleTypes.TOTEM_OF_UNDYING,
                             flashMid.x, flashMid.y, flashMid.z, flashCount, 0.4, 0.4, 0.4, 0.2);
-                    p1.serverLevel().playSound(null, flashMid.x, flashMid.y, flashMid.z,
+                    p1.level().playSound(null, flashMid.x, flashMid.y, flashMid.z,
                             SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.PLAYERS,
                             1.0f, 1.4f + s.qteStep * 0.15f);
                     if (s.qteStep == 3) {
@@ -560,16 +560,16 @@ public class HuddleHandler {
         }
         for (ServerPlayer lp : live) {
             lp.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 200, 2));
-            lp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED,        400, 2));
-            lp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST,     400, 1));
-            lp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE,   200, 0));
+            lp.addEffect(new MobEffectInstance(MobEffects.SPEED,        400, 2));
+            lp.addEffect(new MobEffectInstance(MobEffects.STRENGTH,     400, 1));
+            lp.addEffect(new MobEffectInstance(MobEffects.RESISTANCE,   200, 0));
             lp.experienceLevel += 2;
-            lp.displayClientMessage(net.minecraft.network.chat.Component.literal(
+            com.cooptest.neoforge.PlayerActions.message(lp, net.minecraft.network.chat.Component.literal(
                     "§d§l✦ HUDDLE! ✦ §7+Regen III, Speed III, Strength II, Resistance I"), true);
         }
         ServerPlayer p1 = live.get(0), p2 = live.get(1);
         Vec3 center = p1.position().add(p2.position()).scale(0.5);
-        ServerLevel flashWorld = p1.serverLevel();
+        ServerLevel flashWorld = p1.level();
         flashWorld.playSound(null, center.x, center.y, center.z,
                 SoundEvents.CREEPER_PRIMED, SoundSource.PLAYERS, 2.0f, 0.6f);
         flashWorld.playSound(null, center.x, center.y, center.z,
@@ -584,11 +584,11 @@ public class HuddleHandler {
                     Vec3 sum = Vec3.ZERO;
                     for (ServerPlayer lp : liveFinal) sum = sum.add(lp.position());
                     Vec3 mid = sum.scale(1.0 / liveFinal.size()).add(0, 1, 0);
-                    ServerLevel world = liveFinal.get(0).serverLevel();
+                    ServerLevel world = liveFinal.get(0).level();
                     world.sendParticles(ParticleTypes.HAPPY_VILLAGER,   mid.x, mid.y, mid.z, 80, 0.8, 0.8, 0.8, 0.5);
                     world.sendParticles(ParticleTypes.COMPOSTER,        mid.x, mid.y, mid.z, 60, 0.6, 0.6, 0.6, 0.4);
                     world.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, mid.x, mid.y, mid.z, 40, 0.6, 0.6, 0.6, 0.3);
-                    world.sendParticles(ParticleTypes.FLASH,            mid.x, mid.y, mid.z,  3, 0.1, 0.1, 0.1,   0);
+                    world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF),            mid.x, mid.y, mid.z,  3, 0.1, 0.1, 0.1,   0);
                     world.sendParticles(ParticleTypes.FIREWORK,         mid.x, mid.y, mid.z, 40, 0.5, 0.6, 0.5, 0.25);
                     world.sendParticles(ParticleTypes.CRIT,             mid.x, mid.y - 0.5, mid.z, 20, 1.0, 0, 1.0, 0.05);
                     world.sendParticles(ParticleTypes.HEART,            mid.x, mid.y, mid.z, 15, 0.6, 0.4, 0.6, 0.1);
@@ -620,7 +620,7 @@ public class HuddleHandler {
                     Vec3 sum2 = Vec3.ZERO;
                     for (ServerPlayer lp : liveFinal) sum2 = sum2.add(lp.position());
                     Vec3 mid = sum2.scale(1.0 / liveFinal.size()).add(0, 1, 0);
-                    ServerLevel world = liveFinal.get(0).serverLevel();
+                    ServerLevel world = liveFinal.get(0).level();
                     for (int pulse = 0; pulse < 4; pulse++) {
                         final int pp = pulse;
                         new java.util.Timer().schedule(new java.util.TimerTask() {
@@ -655,9 +655,9 @@ public class HuddleHandler {
             ServerPlayNetworking.send(lp, new DapFusionHandler.FusionQTEPayload(
                     lp.getUUID(), "G", 0, 0L, 0L, false, 0));
             PoseNetworking.broadcastAnimState(lp, ANIM_NONE);
-            lp.removeEffect(MobEffects.MOVEMENT_SPEED);
-            lp.removeEffect(MobEffects.DAMAGE_BOOST);
-            lp.displayClientMessage(net.minecraft.network.chat.Component.literal("§c✗ Huddle failed!"), true);
+            lp.removeEffect(MobEffects.SPEED);
+            lp.removeEffect(MobEffects.STRENGTH);
+            com.cooptest.neoforge.PlayerActions.message(lp, net.minecraft.network.chat.Component.literal("§c✗ Huddle failed!"), true);
             ServerPlayNetworking.send(lp, new HuddleEndPayload(s.p1, s.p2, false));
         }
         if (live.size() >= 2) {
@@ -669,9 +669,9 @@ public class HuddleHandler {
                 lp.push(dir.x * 0.6, 0.4, dir.z * 0.6);
                 lp.hurtMarked = true;
             }
-            live.get(0).serverLevel().sendParticles(ParticleTypes.ANGRY_VILLAGER,
+            live.get(0).level().sendParticles(ParticleTypes.ANGRY_VILLAGER,
                     center.x, center.y + 1, center.z, 8, 0.3, 0.3, 0.3, 0.05);
-            live.get(0).serverLevel().playSound(null, center.x, center.y, center.z,
+            live.get(0).level().playSound(null, center.x, center.y, center.z,
                     SoundEvents.ZOMBIE_INFECT, SoundSource.PLAYERS, 0.7f, 1.5f);
         }
         cleanupSession(s, server);

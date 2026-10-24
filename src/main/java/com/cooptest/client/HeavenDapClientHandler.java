@@ -3,18 +3,14 @@ import com.cooptest.HeavenDapPayloads;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.PackType;
+import net.minecraft.resources.Identifier;
 public class HeavenDapClientHandler {
     private static boolean wasPlayingLastTick = false;
     public static void register() {
-        ResourceManagerHelper.get(PackType.CLIENT_RESOURCES)
-                .registerReloadListener(CoopImpactRenderType.createReloadListener());
         HudRenderCallback.EVENT.register((context, tickCounter) -> {
             HeavenWhiteOverlay.render(context, tickCounter.getGameTimeDeltaTicks());
             if (CoopImpactHandler.playing) {
@@ -65,7 +61,7 @@ public class HeavenDapClientHandler {
         );
     }
     public static record QTEButtonPressPayload(String button) implements CustomPacketPayload {
-        public static final ResourceLocation QTE_BUTTON_PRESS_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "qte_button_press");
+        public static final Identifier QTE_BUTTON_PRESS_ID = Identifier.fromNamespaceAndPath("cooptest", "qte_button_press");
         public static final Type<QTEButtonPressPayload> ID = new Type<>(QTE_BUTTON_PRESS_ID);
         @Override public Type<? extends CustomPacketPayload> type() { return ID; }
         public static final StreamCodec<RegistryFriendlyByteBuf, QTEButtonPressPayload> CODEC =

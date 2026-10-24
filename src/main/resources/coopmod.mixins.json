@@ -2,7 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.cooptest.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_25",
   "mixins": [
     "PlayerEntityPassengerOffsetMixin",
     "GrabbedPlayerControlMixin",
@@ -14,8 +14,7 @@
     "client.PlayerEntityRendererMixin",
     "client.MovementFreezeMixin",
     "client.HeldItemRendererMixin",
-    "client.impactframemixin.ImpactModelPartMixin",
-    "client.impactframemixin.PlayerRenderFlagMixin"
+    "client.ImpactRendererMixin"
   ],
   "server": [],
   "injectors": {

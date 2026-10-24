@@ -4,7 +4,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import java.util.UUID;
 public class FusionClientHandler {
     private static int currentPhase = -1;
@@ -191,7 +191,7 @@ public class FusionClientHandler {
     public static boolean isActive()      { return currentPhase >= 0; }
     public static boolean isQTEOpen()     { return qteActive; }
     public static boolean isGWindowOpen() { return gWindowActive; }
-    private static void renderHUD(GuiGraphics ctx, DeltaTracker ticker) {
+    private static void renderHUD(GuiGraphicsExtractor ctx, DeltaTracker ticker) {
         Minecraft client = Minecraft.getInstance();
         if (client.player == null) return;
         if (blackScreenActive) {
@@ -201,10 +201,10 @@ public class FusionClientHandler {
             int sw = client.getWindow().getGuiScaledWidth();
             int sh = client.getWindow().getGuiScaledHeight();
             var mat = ctx.pose();
-            mat.pushPose();
-            mat.translate(0, 0, 10000);
+            mat.pushMatrix();
+            ctx.nextStratum();
             ctx.fill(0, 0, sw, sh, (a << 24) | 0x000000);
-            mat.popPose();
+            mat.popMatrix();
             return;
         }
         if (currentPhase < 0) return;
@@ -212,8 +212,8 @@ public class FusionClientHandler {
         int sw = client.getWindow().getGuiScaledWidth();
         int sh = client.getWindow().getGuiScaledHeight();
         var mat = ctx.pose();
-        mat.pushPose();
-        mat.translate(0, 0, 900);
+        mat.pushMatrix();
+        ctx.nextStratum();
         if (now < flashEndTime) {
             float p = 1f - (float)(now - (flashEndTime - 800)) / 800f;
             int a = (int)(clamp(p) * 120);
@@ -234,7 +234,7 @@ public class FusionClientHandler {
                 if (fw > 0) ctx.fill(bx, by, bx+fw, by+bh, gPressed ? 0xFF44BB44 : 0xFFFFAA00);
                 String lbl = gPressed ? "§a✓" : "§6[G]";
                 int lw = client.font.width(lbl);
-                ctx.drawString(client.font, lbl, (sw-lw)/2, by - 9, 0xFFFFFFFF, true);
+                ctx.text(client.font, lbl, (sw-lw)/2, by - 9, 0xFFFFFFFF, true);
             }
         }
         if (qteActive) {
@@ -292,7 +292,7 @@ public class FusionClientHandler {
                 int a = (int)(alpha * 255);
                 String keyText = QTEClientHandler.resolveKeyName(expectedButton);
                 int kw = client.font.width(keyText);
-                ctx.drawString(client.font, keyText, (sw-kw)/2, by - 9, (a<<24)|0xFFFFFF, true);
+                ctx.text(client.font, keyText, (sw-kw)/2, by - 9, (a<<24)|0xFFFFFF, true);
             }
             if (maxStages > 1) {
                 int ds = 3, dg = 2;
@@ -306,7 +306,7 @@ public class FusionClientHandler {
                 }
             }
         }
-        mat.popPose();
+        mat.popMatrix();
     }
     private static float clamp(float v) { return Math.max(0f, Math.min(1f, v)); }
     private static void scheduleReset(long delayMs) {

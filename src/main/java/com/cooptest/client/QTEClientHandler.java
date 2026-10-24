@@ -5,7 +5,7 @@ import com.cooptest.QTEClearPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.lwjgl.glfw.GLFW;
 public class QTEClientHandler {
     private static boolean active = false;
@@ -59,12 +59,12 @@ public class QTEClientHandler {
         }
         return true;
     }
-    public static void renderHUD(GuiGraphics context, int screenWidth, int screenHeight) {
+    public static void renderHUD(GuiGraphicsExtractor context, int screenWidth, int screenHeight) {
         if (!active) return;
         long now = System.currentTimeMillis();
         var matrices = context.pose();
-        matrices.pushPose();
-        matrices.translate(0, 0, 1000);
+        matrices.pushMatrix();
+        context.nextStratum();
         int barWidth = 60;
         int barHeight = 4;
         int barX = (screenWidth - barWidth) / 2;
@@ -127,7 +127,7 @@ public class QTEClientHandler {
                 float pulse = (float)(Math.sin(now / 100.0) * 0.3 + 0.7);
                 alpha = (int)(pulse * 255);
             }
-            context.drawString(client.font, keyText, textX, textY, (alpha << 24) | 0xFFFFFF, true);
+            context.text(client.font, keyText, textX, textY, (alpha << 24) | 0xFFFFFF, true);
         }
         if (stage > 0 && maxStages > 1) {
             int dotY = barY + barHeight + 3;
@@ -146,7 +146,7 @@ public class QTEClientHandler {
                 context.fill(dotX, dotY, dotX + 4, dotY + 4, dotColor);
             }
         }
-        matrices.popPose();
+        matrices.popMatrix();
     }
     public static boolean isActive() {
         return active;

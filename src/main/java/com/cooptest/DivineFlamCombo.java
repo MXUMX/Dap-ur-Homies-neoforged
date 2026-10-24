@@ -5,7 +5,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -18,8 +18,8 @@ public class DivineFlamCombo {
     private static final Map<UUID, Long> comboFreezeEnd = new HashMap<>();
     private static final long COMBO_WINDOW_MS = 1460;
     private static final long COMBO_FREEZE_MS = 3800;
-    public static final ResourceLocation DIVINE_J_PRESS_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "divine_j_press");
-    public static final ResourceLocation DIVINE_START_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "divine_start");
+    public static final Identifier DIVINE_J_PRESS_ID = Identifier.fromNamespaceAndPath("cooptest", "divine_j_press");
+    public static final Identifier DIVINE_START_ID = Identifier.fromNamespaceAndPath("cooptest", "divine_start");
     public record DivineJPressPayload() implements CustomPacketPayload {
         public static final Type<DivineJPressPayload> ID = new Type<>(DIVINE_J_PRESS_ID);
         public static final StreamCodec<FriendlyByteBuf, DivineJPressPayload> CODEC =
@@ -62,7 +62,7 @@ public class DivineFlamCombo {
         comboFreezeEnd.put(id2, now + COMBO_WINDOW_MS);
         ServerPlayNetworking.send(p1, new DivineStartPayload());
         ServerPlayNetworking.send(p2, new DivineStartPayload());
-        ServerLevel world = p1.serverLevel();
+        ServerLevel world = p1.level();
         world.playSound(null, midpoint.x, midpoint.y, midpoint.z,
                 ModSounds.EPIC_DAP, SoundSource.PLAYERS, 1.5f, 1.1f);
         System.out.println("[Divine Flame] Divine Flame window opened! Players have 1.46s to press J");
@@ -79,7 +79,7 @@ public class DivineFlamCombo {
         }
         UUID partnerId = comboPartner.get(playerId);
         if (partnerId == null) return;
-        ServerPlayer partner = player.getServer().getPlayerList().getPlayer(partnerId);
+        ServerPlayer partner = player.level().getServer().getPlayerList().getPlayer(partnerId);
         if (partner == null) return;
         if (!comboWindowStart.containsKey(partnerId)) return;
         executeCombo(player, partner);
@@ -99,7 +99,7 @@ public class DivineFlamCombo {
         System.out.println("[Divine Flame] Broadcasting ordinal 37 (P1) and 38 (P2)");
         PoseNetworking.broadcastAnimState(p1, 37);
         PoseNetworking.broadcastAnimState(p2, 38);
-        ServerLevel world = p1.serverLevel();
+        ServerLevel world = p1.level();
         Vec3 midpoint = p1.position().add(p2.position()).scale(0.5);
         System.out.println("[Divine Flame] Spawning Divine Flame vortex at " + midpoint);
         world.playSound(null, midpoint.x, midpoint.y, midpoint.z,
@@ -134,8 +134,8 @@ public class DivineFlamCombo {
                     double dz = p2Pos.z - p1Pos.z;
                     float yawP1 = (float) (Math.atan2(dz, dx) * 180 / Math.PI) - 90;
                     float yawP2 = yawP1 + 180;
-                    p1.teleportTo(p1.serverLevel(), targetP1.x, targetP1.y, targetP1.z, yawP1, p1.getXRot());
-                    p2.teleportTo(p2.serverLevel(), targetP2.x, targetP2.y, targetP2.z, yawP2, p2.getXRot());
+                    com.cooptest.neoforge.PlayerActions.teleport(p1, p1.level(), targetP1.x, targetP1.y, targetP1.z, yawP1, p1.getXRot());
+                    com.cooptest.neoforge.PlayerActions.teleport(p2, p2.level(), targetP2.x, targetP2.y, targetP2.z, yawP2, p2.getXRot());
                 }
             }
         }

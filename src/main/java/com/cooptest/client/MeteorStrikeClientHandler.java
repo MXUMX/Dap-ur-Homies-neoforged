@@ -5,7 +5,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.lwjgl.glfw.GLFW;
 public class MeteorStrikeClientHandler {
     private static boolean hasAbility  = false;
@@ -31,7 +31,7 @@ public class MeteorStrikeClientHandler {
                 }));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (!hasAbility || client.player == null) return;
-            long win = client.getWindow().getWindow();
+            long win = client.getWindow().handle();
             boolean g = GLFW.glfwGetKey(win, GLFW.GLFW_KEY_G) == GLFW.GLFW_PRESS;
             if (g && !wasGPressed && countdownMs < 0) {
                 ClientPlayNetworking.send(new MeteorStrikeHandler.MeteorFirePayload());
@@ -40,21 +40,21 @@ public class MeteorStrikeClientHandler {
         });
         HudRenderCallback.EVENT.register(MeteorStrikeClientHandler::renderHUD);
     }
-    private static void renderHUD(GuiGraphics ctx, DeltaTracker ticker) {
+    private static void renderHUD(GuiGraphicsExtractor ctx, DeltaTracker ticker) {
         if (!hasAbility) return;
         Minecraft client = Minecraft.getInstance();
         if (client.player == null) return;
         int sw = client.getWindow().getGuiScaledWidth();
         int sh = client.getWindow().getGuiScaledHeight();
         var mat = ctx.pose();
-        mat.pushPose();
-        mat.translate(0, 0, 500);
+        mat.pushMatrix();
+        ctx.nextStratum();
         if (countdownMs > 0) {
             String cdText = "☄ METEOR IN " + String.format("%.1f", countdownMs / 1000.0) + "s";
             int tw = client.font.width(cdText);
             int alpha = (int)(180 + 75 * Math.abs(Math.sin(System.currentTimeMillis() / 300.0)));
             int col = (alpha << 24) | 0xFF2200;
-            ctx.drawString(client.font, cdText, (sw - tw) / 2, sh / 2 - 60, col, true);
+            ctx.text(client.font, cdText, (sw - tw) / 2, sh / 2 - 60, col, true);
         } else {
             int bw = 100, bh = 20, bx = sw / 2 - bw / 2, by = sh - 75;
             ctx.fill(bx - 1, by - 1, bx + bw + 1, by + bh + 1, 0xFF000000);
@@ -63,12 +63,12 @@ public class MeteorStrikeClientHandler {
             ctx.fill(bx, by, bx + bw, by + bh, bcol);
             String label = "☄ G — METEOR";
             int lw = client.font.width(label);
-            ctx.drawString(client.font, label, bx + (bw - lw) / 2, by + 6, 0xFFFFFFFF, true);
+            ctx.text(client.font, label, bx + (bw - lw) / 2, by + 6, 0xFFFFFFFF, true);
             String timer = (abilityLeftMs / 1000) + "s";
             int tiw = client.font.width(timer);
-            ctx.drawString(client.font, timer, bx + (bw - tiw) / 2, by + bh + 3, 0xFFAAAAAA, false);
+            ctx.text(client.font, timer, bx + (bw - tiw) / 2, by + bh + 3, 0xFFAAAAAA, false);
         }
-        mat.popPose();
+        mat.popMatrix();
     }
     public static net.minecraft.client.KeyMapping getBurstKey() { return null; }
 }

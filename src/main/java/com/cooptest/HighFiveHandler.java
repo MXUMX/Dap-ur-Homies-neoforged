@@ -8,7 +8,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -154,7 +154,7 @@ public class HighFiveHandler {
         }
     }
     public static final Map<UUID, LinkedList<Double>> speedHistory = new HashMap<>();
-    public static final ResourceLocation HIGH_FIVE_REQUEST_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "high_five_request");
+    public static final Identifier HIGH_FIVE_REQUEST_ID = Identifier.fromNamespaceAndPath("cooptest", "high_five_request");
     public record HighFiveRequestPayload() implements CustomPacketPayload {
         public static final Type<HighFiveRequestPayload> ID = new Type<>(HIGH_FIVE_REQUEST_ID);
         public static final StreamCodec<FriendlyByteBuf, HighFiveRequestPayload> CODEC =
@@ -162,7 +162,7 @@ public class HighFiveHandler {
         @Override
         public Type<? extends CustomPacketPayload> type() { return ID; }
     }
-    public static final ResourceLocation HAND_RAISED_SYNC_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "hand_raised_sync");
+    public static final Identifier HAND_RAISED_SYNC_ID = Identifier.fromNamespaceAndPath("cooptest", "hand_raised_sync");
     public record HandRaisedSyncPayload(UUID playerId, boolean raised) implements CustomPacketPayload {
         public static final Type<HandRaisedSyncPayload> ID = new Type<>(HAND_RAISED_SYNC_ID);
         public static final StreamCodec<FriendlyByteBuf, HandRaisedSyncPayload> CODEC =
@@ -176,7 +176,7 @@ public class HighFiveHandler {
         @Override
         public Type<? extends CustomPacketPayload> type() { return ID; }
     }
-    public static final ResourceLocation HIGH_FIVE_SUCCESS_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "high_five_success");
+    public static final Identifier HIGH_FIVE_SUCCESS_ID = Identifier.fromNamespaceAndPath("cooptest", "high_five_success");
     public record HighFiveSuccessPayload(double x, double y, double z, UUID player1, UUID player2, int tier) implements CustomPacketPayload {
         public static final Type<HighFiveSuccessPayload> ID = new Type<>(HIGH_FIVE_SUCCESS_ID);
         public static final StreamCodec<FriendlyByteBuf, HighFiveSuccessPayload> CODEC =
@@ -197,7 +197,7 @@ public class HighFiveHandler {
         @Override
         public Type<? extends CustomPacketPayload> type() { return ID; }
     }
-    public static final ResourceLocation HIGH_FIVE_ANIM_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "high_five_anim");
+    public static final Identifier HIGH_FIVE_ANIM_ID = Identifier.fromNamespaceAndPath("cooptest", "high_five_anim");
     public record HighFiveAnimPayload(UUID playerId, int animState) implements CustomPacketPayload {
         public static final Type<HighFiveAnimPayload> ID = new Type<>(HIGH_FIVE_ANIM_ID);
         public static final StreamCodec<FriendlyByteBuf, HighFiveAnimPayload> CODEC =
@@ -211,9 +211,9 @@ public class HighFiveHandler {
         @Override
         public Type<? extends CustomPacketPayload> type() { return ID; }
     }
-    public static final ResourceLocation COMBO_REQUEST_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "highfive_combo_request");
-    public static final ResourceLocation COMBO_WINDOW_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "highfive_combo_window");
-    public static final ResourceLocation COMBO_WINDOW_CLOSE_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "highfive_combo_window_close");
+    public static final Identifier COMBO_REQUEST_ID = Identifier.fromNamespaceAndPath("cooptest", "highfive_combo_request");
+    public static final Identifier COMBO_WINDOW_ID = Identifier.fromNamespaceAndPath("cooptest", "highfive_combo_window");
+    public static final Identifier COMBO_WINDOW_CLOSE_ID = Identifier.fromNamespaceAndPath("cooptest", "highfive_combo_window_close");
     public record ComboRequestPayload() implements CustomPacketPayload {
         public static final Type<ComboRequestPayload> ID = new Type<>(COMBO_REQUEST_ID);
         public static final StreamCodec<FriendlyByteBuf, ComboRequestPayload> CODEC =
@@ -241,7 +241,7 @@ public class HighFiveHandler {
         @Override
         public Type<? extends CustomPacketPayload> type() { return ID; }
     }
-    public static final ResourceLocation FREEZE_STATE_ID = ResourceLocation.fromNamespaceAndPath("testcoop", "freeze_state");
+    public static final Identifier FREEZE_STATE_ID = Identifier.fromNamespaceAndPath("testcoop", "freeze_state");
     public record FreezeStatePayload(UUID playerId, boolean frozen) implements CustomPacketPayload {
         public static final Type<FreezeStatePayload> ID = new Type<>(FREEZE_STATE_ID);
         public static final StreamCodec<FriendlyByteBuf, FreezeStatePayload> CODEC =
@@ -261,7 +261,7 @@ public class HighFiveHandler {
     public static final int ANIM_SIKE  = 4;
     public record SikeRequestPayload() implements CustomPacketPayload {
         public static final Type<SikeRequestPayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("testcoop", "highfive_sike_request"));
+                new Type<>(Identifier.fromNamespaceAndPath("testcoop", "highfive_sike_request"));
         public static final StreamCodec<FriendlyByteBuf, SikeRequestPayload> CODEC =
                 StreamCodec.unit(new SikeRequestPayload());
         @Override public Type<? extends CustomPacketPayload> type() { return ID; }
@@ -271,7 +271,7 @@ public class HighFiveHandler {
     private static final Map<UUID, Long> sikeSlowEnd = new HashMap<>();
     private static final long SIKE_ANIM_MS = 1458L;
     private static final long SIKE_SLOW_MS = 2000L;
-    private static final ResourceLocation SIKE_SLOW_ID = ResourceLocation.fromNamespaceAndPath("testcoop", "sike_slow");
+    private static final Identifier SIKE_SLOW_ID = Identifier.fromNamespaceAndPath("testcoop", "sike_slow");
     public static void registerPayloads() {
         PayloadTypeRegistry.playC2S().register(HighFiveRequestPayload.ID, HighFiveRequestPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(HighFiveSuccessPayload.ID, HighFiveSuccessPayload.CODEC);
@@ -353,8 +353,8 @@ public class HighFiveHandler {
                             if (player != null && partner != null) {
                                 boolean partnerPressed = comboRequested.containsKey(partnerId);
                                 if (!partnerPressed) {
-                                    player.displayClientMessage(net.minecraft.network.chat.Component.literal("§c✗ " + partner.getName().getString() + " missed the combo!"), true);
-                                    partner.displayClientMessage(net.minecraft.network.chat.Component.literal("§c✗ You missed the combo! " + player.getName().getString() + " pressed H!"), true);
+                                    com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal("§c✗ " + partner.getName().getString() + " missed the combo!"), true);
+                                    com.cooptest.neoforge.PlayerActions.message(partner, net.minecraft.network.chat.Component.literal("§c✗ You missed the combo! " + player.getName().getString() + " pressed H!"), true);
                                 }
                             }
                         }
@@ -400,7 +400,7 @@ public class HighFiveHandler {
                     Vec3 frozenPos = entry.getValue();
                     Vec3 currentPos = player.position();
                     if (currentPos.distanceToSqr(frozenPos) > 0.01) {
-                        player.teleportTo(frozenPos.x, frozenPos.y, frozenPos.z);
+                        com.cooptest.neoforge.PlayerActions.teleport(player, frozenPos.x, frozenPos.y, frozenPos.z);
                         player.setDeltaMovement(Vec3.ZERO);
                         player.hurtMarked = true;
                     }
@@ -531,17 +531,17 @@ public class HighFiveHandler {
         long now = System.currentTimeMillis();
         endAnimTime.put(playerId, now + END_ANIM_DURATION_MS);
         broadcastHighFiveAnim(player, ANIM_END);
-        ServerLevel world = player.serverLevel();
+        ServerLevel world = player.level();
         Vec3 pos = player.position().add(0, 1.6, 0);
         world.playSound(null, pos.x, pos.y, pos.z,
                 SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.8f, 0.5f);
         world.playSound(null, pos.x, pos.y, pos.z,
                 SoundEvents.SAND_BREAK, SoundSource.PLAYERS, 0.4f, 1.2f);
         world.sendParticles(ParticleTypes.POOF, pos.x, pos.y, pos.z, 6, 0.15, 0.15, 0.15, 0.01);
-        player.displayClientMessage(net.minecraft.network.chat.Component.literal("§7*left hanging*"), true);
+        com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal("§7*left hanging*"), true);
     }
     private static void broadcastHighFiveAnim(ServerPlayer player, int animState) {
-        var server = player.getServer();
+        var server = player.level().getServer();
         if (server == null) return;
         HighFiveAnimPayload payload = new HighFiveAnimPayload(player.getUUID(), animState);
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
@@ -566,7 +566,7 @@ public class HighFiveHandler {
         }
         if (ChargedDapHandler.isInComboCooldown(uuid)) {
             System.out.println("[HighFive] Blocked H raise - combo cooldown active!");
-            player.displayClientMessage(net.minecraft.network.chat.Component.literal("§cWait 1 second after combo!"), true);
+            com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal("§cWait 1 second after combo!"), true);
             syncHandRaised(player, false);
             return;
         }
@@ -587,7 +587,7 @@ public class HighFiveHandler {
             startAnimTime.put(uuid, now);
             syncHandRaised(player, true);
             broadcastHighFiveAnim(player, ANIM_START);
-            player.serverLevel().playSound(null, player.getX(), player.getY(), player.getZ(),
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.3f, 1.5f);
         }
     }
@@ -595,14 +595,14 @@ public class HighFiveHandler {
         if (player == null) return;
         System.out.println("[HighFive Server] syncHandRaised: " + player.getName().getString() + " raised=" + raised);
         HandRaisedSyncPayload payload = new HandRaisedSyncPayload(player.getUUID(), raised);
-        for (ServerPlayer other : PlayerLookup.all(player.getServer())) {
+        for (ServerPlayer other : PlayerLookup.all(player.level().getServer())) {
             ServerPlayNetworking.send(other, payload);
         }
     }
     private static ServerPlayer findHighFivePartner(ServerPlayer player) {
         AABB searchBox = player.getBoundingBox().inflate(HIGH_FIVE_RANGE);
         long now = System.currentTimeMillis();
-        for (ServerPlayer other : player.serverLevel().players()) {
+        for (ServerPlayer other : player.level().players()) {
             if (other == player) continue;
             if (!handRaisedTime.containsKey(other.getUUID())) continue;
             if (isOnCooldown(other.getUUID())) continue;
@@ -660,7 +660,7 @@ public class HighFiveHandler {
                 highFivePos.x, highFivePos.y, highFivePos.z,
                 player1.getUUID(), player2.getUUID(), tier
         );
-        for (ServerPlayer other : PlayerLookup.all(player1.getServer())) {
+        for (ServerPlayer other : PlayerLookup.all(player1.level().getServer())) {
             ServerPlayNetworking.send(other, successPayload);
         }
         comboWindowStart.put(player1.getUUID(), now);
@@ -670,7 +670,7 @@ public class HighFiveHandler {
         final ServerPlayer fp1 = player1, fp2 = player2;
         new Thread(() -> {
             try { Thread.sleep(250); } catch (InterruptedException ignored) {}
-            fp1.getServer().execute(() -> {
+            fp1.level().getServer().execute(() -> {
                 ServerPlayNetworking.send(fp1, new ComboWindowPayload(fp1.getUUID()));
                 ServerPlayNetworking.send(fp2, new ComboWindowPayload(fp2.getUUID()));
                 HighFiveQTEHugHandler.startHugQTE(fp1, fp2);
@@ -679,7 +679,7 @@ public class HighFiveHandler {
         if (CoopMovesConfig.get().enableHighFiveHug) {
             new Thread(() -> {
                 try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
-                fp1.getServer().execute(() -> {
+                fp1.level().getServer().execute(() -> {
                     if (!HighFiveQTEHugHandler.isInHugSession(fp1.getUUID())
                             && !HighFiveQTEHugHandler.isInHugSession(fp2.getUUID())) {
                         HighFiveHugHandler.startHugHold(fp1, fp2);
@@ -701,8 +701,8 @@ public class HighFiveHandler {
         syncHandRaised(siker, false);
         syncHandRaised(victim, false);
         if (mutualSike) {
-            siker.hurt(siker.serverLevel().damageSources().generic(), 6.0f);
-            victim.hurt(victim.serverLevel().damageSources().generic(), 6.0f);
+            siker.hurt(siker.level().damageSources().generic(), 6.0f);
+            victim.hurt(victim.level().damageSources().generic(), 6.0f);
             Vec3 toVictim = victim.position().subtract(siker.position()).normalize();
             if (toVictim.lengthSqr() < 0.001) toVictim = new Vec3(1, 0, 0);
             siker.push(toVictim.reverse().x * 0.6, 0.5, toVictim.reverse().z * 0.6);
@@ -715,13 +715,13 @@ public class HighFiveHandler {
             PoseNetworking.broadcastAnimState(victim, 63);
             sikeStunEnd.put(sikerId,  now + SIKE_ANIM_MS);
             sikeStunEnd.put(victimId, now + SIKE_ANIM_MS);
-            for (ServerPlayer p : PlayerLookup.all(siker.getServer())) {
+            for (ServerPlayer p : PlayerLookup.all(siker.level().getServer())) {
                 ServerPlayNetworking.send(p, new FreezeStatePayload(sikerId,  true));
                 ServerPlayNetworking.send(p, new FreezeStatePayload(victimId, true));
             }
             frozenPositions.put(sikerId,  siker.position());
             frozenPositions.put(victimId, victim.position());
-            ServerLevel world = siker.serverLevel();
+            ServerLevel world = siker.level();
             Vec3 mid = siker.position().add(victim.position()).scale(0.5).add(0, 1, 0);
             world.playSound(null, mid.x, mid.y, mid.z,
                     SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 1.2f, 0.7f);
@@ -729,8 +729,8 @@ public class HighFiveHandler {
                     SoundEvents.DONKEY_ANGRY, SoundSource.PLAYERS, 0.9f, 0.8f);
             world.sendParticles(ParticleTypes.EXPLOSION, mid.x, mid.y, mid.z, 2, 0.3, 0.3, 0.3, 0);
             world.sendParticles(ParticleTypes.ANGRY_VILLAGER, mid.x, mid.y + 1, mid.z, 8, 0.4, 0.3, 0.4, 0.05);
-            siker.displayClientMessage(net.minecraft.network.chat.Component.literal("§4§l💥 MUTUAL SIKE! You both suffer!"), true);
-            victim.displayClientMessage(net.minecraft.network.chat.Component.literal("§4§l💥 MUTUAL SIKE! You both suffer!"), true);
+            com.cooptest.neoforge.PlayerActions.message(siker, net.minecraft.network.chat.Component.literal("§4§l💥 MUTUAL SIKE! You both suffer!"), true);
+            com.cooptest.neoforge.PlayerActions.message(victim, net.minecraft.network.chat.Component.literal("§4§l💥 MUTUAL SIKE! You both suffer!"), true);
             highFiveCooldown.put(sikerId,  now);
             highFiveCooldown.put(victimId, now);
             return;
@@ -742,13 +742,13 @@ public class HighFiveHandler {
         frozenPositions.put(victimId, victim.position());
         victim.setDeltaMovement(Vec3.ZERO);
         victim.hurtMarked = true;
-        for (ServerPlayer p : PlayerLookup.all(siker.getServer())) {
+        for (ServerPlayer p : PlayerLookup.all(siker.level().getServer())) {
             ServerPlayNetworking.send(p, new FreezeStatePayload(victimId, true));
         }
-        siker.serverLevel().playSound(null,
+        siker.level().playSound(null,
                 siker.getX(), siker.getY(), siker.getZ(),
                 SoundEvents.WITCH_CELEBRATE, SoundSource.PLAYERS, 1.0f, 1.0f);
-        ServerLevel world = victim.serverLevel();
+        ServerLevel world = victim.level();
         Vec3 vp = victim.position().add(0, 1.8, 0);
         world.playSound(null, vp.x, vp.y, vp.z,
                 SoundEvents.VILLAGER_NO,  SoundSource.PLAYERS, 1.0f, 0.8f);
@@ -760,13 +760,13 @@ public class HighFiveHandler {
         world.sendParticles(ParticleTypes.POOF, vp.x, vp.y + 0.3, vp.z, 8, 0.2, 0.1, 0.2, 0.03);
         world.sendParticles(ParticleTypes.ANGRY_VILLAGER, vp.x, vp.y + 0.6, vp.z, 4, 0.3, 0.2, 0.3, 0.05);
         world.sendParticles(ParticleTypes.LARGE_SMOKE, vp.x, vp.y, vp.z, 5, 0.15, 0.2, 0.15, 0.01);
-        siker.displayClientMessage(net.minecraft.network.chat.Component.literal("§6§l😂 SIKE!"), true);
-        victim.displayClientMessage(net.minecraft.network.chat.Component.literal("§c§lSIKE!"), true);
+        com.cooptest.neoforge.PlayerActions.message(siker, net.minecraft.network.chat.Component.literal("§6§l😂 SIKE!"), true);
+        com.cooptest.neoforge.PlayerActions.message(victim, net.minecraft.network.chat.Component.literal("§c§lSIKE!"), true);
         highFiveCooldown.put(sikerId, now);
     }
     private static void executeHighFiveEffects(ServerPlayer player1, ServerPlayer player2,
                                                Vec3 highFivePos, int tier) {
-        ServerLevel world = player1.serverLevel();
+        ServerLevel world = player1.level();
         switch (tier) {
             case 0 -> executeTier0(world, highFivePos, player1, player2);
             case 1 -> executeTier1(world, highFivePos, player1, player2);
@@ -807,7 +807,7 @@ public class HighFiveHandler {
         spawnStarBurst(world, pos, 24, 0.7);
         world.sendParticles(ParticleTypes.FIREWORK, pos.x, pos.y, pos.z, 25, 0.2, 0.2, 0.2, 0.18);
         world.sendParticles(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 15, 0.3, 0.3, 0.3, 0.1);
-        world.sendParticles(ParticleTypes.FLASH, pos.x, pos.y, pos.z, 1, 0, 0, 0, 0);
+        world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF), pos.x, pos.y, pos.z, 1, 0, 0, 0, 0);
         world.sendParticles(ParticleTypes.WAX_ON, pos.x, pos.y, pos.z, 15, 0.3, 0.3, 0.3, 0.05);
         applyKnockback(p1, p2, pos, 0.8);
     }
@@ -826,14 +826,14 @@ public class HighFiveHandler {
         world.sendParticles(ParticleTypes.EXPLOSION, pos.x, pos.y, pos.z, 3, 0.5, 0.5, 0.5, 0);
         world.sendParticles(ParticleTypes.FIREWORK, pos.x, pos.y, pos.z, 40, 0.3, 0.3, 0.3, 0.25);
         world.sendParticles(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 25, 0.5, 0.5, 0.5, 0.15);
-        world.sendParticles(ParticleTypes.FLASH, pos.x, pos.y, pos.z, 2, 0, 0, 0, 0);
+        world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF), pos.x, pos.y, pos.z, 2, 0, 0, 0, 0);
         world.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, pos.x, pos.y, pos.z, 20, 0.4, 0.4, 0.4, 0.1);
         world.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, pos.x, pos.y, pos.z, 30, 0.5, 0.5, 0.5, 0.3);
         createBattleShockwave(world, pos, p1, p2, 10.0);
         ChargedDapHandler.applyImpactFreeze(p1, p2, 3);
         applyKnockback(p1, p2, pos, 0.3);
-        p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§6§l⚡ SHOCKWAVE! ⚡"), true);
-        p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§6§l⚡ SHOCKWAVE! ⚡"), true);
+        com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§6§l⚡ SHOCKWAVE! ⚡"), true);
+        com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§6§l⚡ SHOCKWAVE! ⚡"), true);
     }
     private static void createBattleShockwave(ServerLevel world, Vec3 pos, ServerPlayer p1, ServerPlayer p2, double radius) {
         for (int ring = 1; ring <= 5; ring++) {
@@ -951,7 +951,7 @@ public class HighFiveHandler {
         comboRequested.put(playerId, now);
         UUID partnerId = comboPartner.get(playerId);
         if (partnerId == null) return;
-        ServerPlayer partner = player.getServer().getPlayerList().getPlayer(partnerId);
+        ServerPlayer partner = player.level().getServer().getPlayerList().getPlayer(partnerId);
         if (partner == null) return;
         if (!comboWindowStart.containsKey(partnerId)) {
             return;
@@ -985,27 +985,27 @@ public class HighFiveHandler {
         p2.setDeltaMovement(Vec3.ZERO);
         p1.hurtMarked = true;
         p2.hurtMarked = true;
-        for (ServerPlayer p : PlayerLookup.all(p1.getServer())) {
+        for (ServerPlayer p : PlayerLookup.all(p1.level().getServer())) {
             ServerPlayNetworking.send(p, new FreezeStatePayload(id1, true));
             ServerPlayNetworking.send(p, new FreezeStatePayload(id2, true));
         }
         PoseNetworking.broadcastAnimState(p1, 21);
         PoseNetworking.broadcastAnimState(p2, 21);
         pendingComboImpacts.put(id1, new ComboImpact(p1, p2, now + COMBO_SECOND_HIT_MS));
-        p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§6§l✨ COMBO! ✨"), true);
-        p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§6§l✨ COMBO! ✨"), true);
+        com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§6§l✨ COMBO! ✨"), true);
+        com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§6§l✨ COMBO! ✨"), true);
     }
     private static void executeSecondImpact(ServerPlayer p1, ServerPlayer p2) {
         Vec3 pos = p1.position().add(p2.position()).scale(0.5).add(0, 0.5, 0);
-        ServerLevel world = p1.serverLevel();
+        ServerLevel world = p1.level();
         world.playSound(null, pos.x, pos.y, pos.z,
                 ModSounds.DAP_WEAK, SoundSource.PLAYERS, 1.0f, 1.0f);
         world.playSound(null, pos.x, pos.y, pos.z,
                 SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1.5f, 1.0f);
         world.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, pos.x, pos.y, pos.z, 30, 0.3, 0.3, 0.3, 0.1);
         world.sendParticles(ParticleTypes.CRIT, pos.x, pos.y, pos.z, 20, 0.3, 0.3, 0.3, 0.15);
-        p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§e⚡ PERFECT! ⚡"), true);
-        p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§e⚡ PERFECT! ⚡"), true);
+        com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§e⚡ PERFECT! ⚡"), true);
+        com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§e⚡ PERFECT! ⚡"), true);
     }
     private static void spawnComboAura(ServerLevel world, Vec3 pos1, Vec3 pos2) {
         int particleCount = 20;
@@ -1082,7 +1082,7 @@ public class HighFiveHandler {
         }
         Vec3 toP2 = p2.position().subtract(p1.position()).normalize();
         if (toP2.lengthSqr() < 0.01) toP2 = new Vec3(1, 0, 0);
-        ServerLevel world = p1.serverLevel();
+        ServerLevel world = p1.level();
         p1.hurt(world.damageSources().magic(), 6.0f);
         p2.hurt(world.damageSources().magic(), 6.0f);
         p1.setDeltaMovement(toP2.reverse().scale(0.65).add(0, 0.5, 0));
@@ -1099,7 +1099,7 @@ public class HighFiveHandler {
                 SoundEvents.VILLAGER_NO,        SoundSource.PLAYERS, 1.0f, 0.8f);
         world.playSound(null, mid.x, mid.y, mid.z,
                 SoundEvents.WITCH_CELEBRATE,    SoundSource.PLAYERS, 0.8f, 1.2f);
-        p1.displayClientMessage(net.minecraft.network.chat.Component.literal("§c§l💥 MUTUAL SIKE! You both played dirty!"), true);
-        p2.displayClientMessage(net.minecraft.network.chat.Component.literal("§c§l💥 MUTUAL SIKE! You both played dirty!"), true);
+        com.cooptest.neoforge.PlayerActions.message(p1, net.minecraft.network.chat.Component.literal("§c§l💥 MUTUAL SIKE! You both played dirty!"), true);
+        com.cooptest.neoforge.PlayerActions.message(p2, net.minecraft.network.chat.Component.literal("§c§l💥 MUTUAL SIKE! You both played dirty!"), true);
     }
 }

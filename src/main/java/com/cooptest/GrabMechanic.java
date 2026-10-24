@@ -9,7 +9,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -73,22 +73,22 @@ public class GrabMechanic {
         if (holderPose != PoseState.GRAB_READY) return false;
         if (holder.isPassenger() && holder.getVehicle() == held) return false;
         if (held.isPassenger() && held.getVehicle() == holder) return false;
-        boolean success = held.startRiding(holder, true);
+        boolean success = held.startRiding(holder, true, true);
         if (!success) return false;
         holding.put(holder.getUUID(), held.getUUID());
         heldBy.put(held.getUUID(), holder.getUUID());
         PoseNetworking.poseStates.put(holder.getUUID(), PoseState.GRAB_HOLDING);
         PoseNetworking.poseStates.put(held.getUUID(), PoseState.GRABBED);
-        if (holder.getServer() != null) {
-            PoseNetworking.broadcastPoseChange(holder.getServer(), holder.getUUID(), PoseState.GRAB_HOLDING);
-            PoseNetworking.broadcastPoseChange(holder.getServer(), held.getUUID(), PoseState.GRABBED);
-            GrabNetworking.broadcastGrabState(holder.getServer(), holder.getUUID(), held.getUUID(), true);
+        if (holder.level().getServer() != null) {
+            PoseNetworking.broadcastPoseChange(holder.level().getServer(), holder.getUUID(), PoseState.GRAB_HOLDING);
+            PoseNetworking.broadcastPoseChange(holder.level().getServer(), held.getUUID(), PoseState.GRABBED);
+            GrabNetworking.broadcastGrabState(holder.level().getServer(), holder.getUUID(), held.getUUID(), true);
             ClientboundSetPassengersPacket packet = new ClientboundSetPassengersPacket(holder);
-            for (ServerPlayer p : holder.getServer().getPlayerList().getPlayers()) {
+            for (ServerPlayer p : holder.level().getServer().getPlayerList().getPlayers()) {
                 p.connection.send(packet);
             }
         }
-        holder.serverLevel().playSound(null, holder.getX(), holder.getY(), holder.getZ(),
+        holder.level().playSound(null, holder.getX(), holder.getY(), holder.getZ(),
                 SoundEvents.ARMOR_EQUIP_LEATHER, SoundSource.PLAYERS, 1.0f, 1.0f);
         return true;
     }
@@ -96,17 +96,17 @@ public class GrabMechanic {
         UUID heldId = holding.get(holder.getUUID());
         if (heldId == null) return false;
         if (isInShieldMode(holder.getUUID())) {
-            holder.displayClientMessage(net.minecraft.network.chat.Component.literal("§cSwitch to throw mode first! (Press V)"), true);
+            com.cooptest.neoforge.PlayerActions.message(holder, net.minecraft.network.chat.Component.literal("§cSwitch to throw mode first! (Press V)"), true);
             return false;
         }
-        ServerPlayer held = holder.getServer().getPlayerList().getPlayer(heldId);
+        ServerPlayer held = holder.level().getServer().getPlayerList().getPlayer(heldId);
         if (held == null) {
             cleanupGrab(holder.getUUID());
             return false;
         }
         if (!holder.isCreative()) {
             if (holder.getFoodData().getFoodLevel() < 6) {
-                holder.displayClientMessage(net.minecraft.network.chat.Component.literal("§cToo hungry to throw!"), true);
+                com.cooptest.neoforge.PlayerActions.message(holder, net.minecraft.network.chat.Component.literal("§cToo hungry to throw!"), true);
                 return false;
             }
             holder.getFoodData().addExhaustion(2.0f);
@@ -127,33 +127,33 @@ public class GrabMechanic {
         holding.remove(holder.getUUID());
         heldBy.remove(held.getUUID());
         PoseNetworking.poseStates.put(holder.getUUID(), PoseState.NONE);
-        if (holder.getServer() != null) {
-            PoseNetworking.broadcastPoseChange(holder.getServer(), holder.getUUID(), PoseState.NONE);
+        if (holder.level().getServer() != null) {
+            PoseNetworking.broadcastPoseChange(holder.level().getServer(), holder.getUUID(), PoseState.NONE);
             PoseNetworking.broadcastAnimState(holder, 0);
-            GrabNetworking.broadcastGrabState(holder.getServer(), holder.getUUID(), held.getUUID(), false);
+            GrabNetworking.broadcastGrabState(holder.level().getServer(), holder.getUUID(), held.getUUID(), false);
             ClientboundSetPassengersPacket packet = new ClientboundSetPassengersPacket(holder);
-            for (ServerPlayer p : holder.getServer().getPlayerList().getPlayers()) {
+            for (ServerPlayer p : holder.level().getServer().getPlayerList().getPlayers()) {
                 p.connection.send(packet);
             }
         }
         float throwYaw = holder.getYRot();
         float throwPitch = holder.getXRot();
-        held.moveTo(releasePos.x, releasePos.y, releasePos.z, throwYaw, throwPitch);
+        held.snapTo(releasePos.x, releasePos.y, releasePos.z, throwYaw, throwPitch);
         held.setYHeadRot(throwYaw);
         held.connection.teleport(releasePos.x, releasePos.y, releasePos.z, throwYaw, throwPitch);
         pendingThrows.put(held.getUUID(), new PendingThrow(holder, held, throwVelocity, 3));
-        holder.serverLevel().playSound(null, holder.getX(), holder.getY(), holder.getZ(),
+        holder.level().playSound(null, holder.getX(), holder.getY(), holder.getZ(),
                 SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 0.8f + (power * 0.4f));
         spawnThrowParticles(holder, held);
         return true;
     }
     private static void spawnThrowParticles(ServerPlayer holder, ServerPlayer held) {
-        ServerLevel world = holder.serverLevel();
+        ServerLevel world = holder.level();
         Vec3 pos = holder.position();
         for (int i = 0; i < 10; i++) {
-            double offsetX = (world.random.nextDouble() - 0.5) * 0.5;
-            double offsetY = world.random.nextDouble() * 0.5 + 0.5;
-            double offsetZ = (world.random.nextDouble() - 0.5) * 0.5;
+            double offsetX = (world.getRandom().nextDouble() - 0.5) * 0.5;
+            double offsetY = world.getRandom().nextDouble() * 0.5 + 0.5;
+            double offsetZ = (world.getRandom().nextDouble() - 0.5) * 0.5;
             world.sendParticles(ParticleTypes.CLOUD,
                     pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ,
                     1, 0, 0, 0, 0.05);
@@ -222,8 +222,8 @@ public class GrabMechanic {
             long timeSinceThrow = System.currentTimeMillis() - data.throwTimeMs;
             if (!data.elytraBoostUsed && timeSinceThrow < 2000) {
                 if (elytraBoostRequests.remove(playerId) != null) {
-                    if (player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.CHEST).getItem()
-                            instanceof net.minecraft.world.item.ElytraItem) {
+                    if (player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.CHEST)
+                            .has(net.minecraft.core.component.DataComponents.GLIDER)) {
                         Vec3 look = player.getViewVector(1.0f);
                         double boostStrength = 1.5;
                         player.setDeltaMovement(player.getDeltaMovement().add(
@@ -233,9 +233,9 @@ public class GrabMechanic {
                         ));
                         player.hurtMarked = true;
                         player.startFallFlying();
-                        player.serverLevel().playSound(null, player.getX(), player.getY(), player.getZ(),
+                        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                                 SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 1.0f, 1.2f);
-                        player.serverLevel().sendParticles(ParticleTypes.FIREWORK,
+                        player.level().sendParticles(ParticleTypes.FIREWORK,
                                 player.getX(), player.getY(), player.getZ(), 10, 0.2, 0.2, 0.2, 0.1);
                         data.elytraBoostUsed = true;
                         PoseNetworking.poseStates.put(playerId, PoseState.NONE);
@@ -323,7 +323,7 @@ public class GrabMechanic {
         heldBy.remove(heldId);
         shieldMode.remove(holderId);
         shieldSwapCooldown.remove(holderId);
-        holder.removeEffect(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN);
+        holder.removeEffect(net.minecraft.world.effect.MobEffects.SLOWNESS);
 
         net.minecraft.world.entity.decoration.ArmorStand armorStand = shieldArmorStands.remove(holderId);
         if (armorStand != null && !armorStand.isRemoved()) {
@@ -348,7 +348,7 @@ public class GrabMechanic {
     }
 
     private static void checkWallCollision(ServerPlayer player, ThrownPlayerData data) {
-        ServerLevel world = player.serverLevel();
+        ServerLevel world = player.level();
         Vec3 currentPos = player.position();
         Vec3 velocity = player.getDeltaMovement();
         double speed = velocity.horizontalDistance();
@@ -425,14 +425,14 @@ public class GrabMechanic {
         return Math.max(1.0f, Math.min(10.0f, baseDamage * speedMultiplier));
     }
     private static void spawnTrailParticles(ServerPlayer player) {
-        ServerLevel world = player.serverLevel();
+        ServerLevel world = player.level();
         Vec3 pos = player.position();
         world.sendParticles(ParticleTypes.CLOUD,
                 pos.x, pos.y + 0.5, pos.z,
                 1, 0.1, 0.1, 0.1, 0.02);
     }
     private static void spawnLandingParticles(ServerPlayer player) {
-        ServerLevel world = player.serverLevel();
+        ServerLevel world = player.level();
         Vec3 pos = player.position();
         BlockPos groundPos = player.blockPosition().below();
         BlockState groundBlock = world.getBlockState(groundPos);
@@ -456,9 +456,9 @@ public class GrabMechanic {
             BlockParticleOption blockParticle = new BlockParticleOption(
                     ParticleTypes.BLOCK, groundBlock);
             for (int i = 0; i < 30; i++) {
-                double offsetX = (world.random.nextDouble() - 0.5) * 1.5;
-                double offsetZ = (world.random.nextDouble() - 0.5) * 1.5;
-                double velY = world.random.nextDouble() * 0.5 + 0.2;
+                double offsetX = (world.getRandom().nextDouble() - 0.5) * 1.5;
+                double offsetZ = (world.getRandom().nextDouble() - 0.5) * 1.5;
+                double velY = world.getRandom().nextDouble() * 0.5 + 0.2;
                 world.sendParticles(blockParticle,
                         pos.x + offsetX, pos.y + 0.1, pos.z + offsetZ,
                         1, 0, velY, 0, 0.15);
@@ -484,8 +484,8 @@ public class GrabMechanic {
         double startY = player.getY();
         for (double checkY = startY; checkY > startY - maxDistance; checkY -= 0.5) {
             var blockPos = player.blockPosition().atY((int) checkY - 1);
-            var blockState = player.serverLevel().getBlockState(blockPos);
-            if (!blockState.isAir() && blockState.isRedstoneConductor(player.serverLevel(), blockPos)) {
+            var blockState = player.level().getBlockState(blockPos);
+            if (!blockState.isAir() && blockState.isRedstoneConductor(player.level(), blockPos)) {
                 return true;
             }
         }
@@ -494,62 +494,62 @@ public class GrabMechanic {
     public static boolean tryDrop(ServerPlayer holder) {
         UUID heldId = holding.get(holder.getUUID());
         if (heldId == null) return false;
-        ServerPlayer held = holder.getServer().getPlayerList().getPlayer(heldId);
+        ServerPlayer held = holder.level().getServer().getPlayerList().getPlayer(heldId);
         if (held == null) {
             cleanupGrab(holder.getUUID());
             return false;
         }
         if (isInShieldMode(holder.getUUID())) {
-            holder.removeEffect(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN);
+            holder.removeEffect(net.minecraft.world.effect.MobEffects.SLOWNESS);
         }
         held.stopRiding();
         cleanupGrab(holder.getUUID());
         PoseNetworking.poseStates.put(holder.getUUID(), PoseState.NONE);
         PoseNetworking.poseStates.put(held.getUUID(), PoseState.NONE);
-        if (holder.getServer() != null) {
-            PoseNetworking.broadcastPoseChange(holder.getServer(), holder.getUUID(), PoseState.NONE);
-            PoseNetworking.broadcastPoseChange(holder.getServer(), held.getUUID(), PoseState.NONE);
+        if (holder.level().getServer() != null) {
+            PoseNetworking.broadcastPoseChange(holder.level().getServer(), holder.getUUID(), PoseState.NONE);
+            PoseNetworking.broadcastPoseChange(holder.level().getServer(), held.getUUID(), PoseState.NONE);
             PoseNetworking.broadcastAnimState(holder, 0);
             PoseNetworking.broadcastAnimState(held, 0);
-            GrabNetworking.broadcastGrabState(holder.getServer(), holder.getUUID(), held.getUUID(), false);
+            GrabNetworking.broadcastGrabState(holder.level().getServer(), holder.getUUID(), held.getUUID(), false);
             ClientboundSetPassengersPacket packet = new ClientboundSetPassengersPacket(holder);
-            for (ServerPlayer p : holder.getServer().getPlayerList().getPlayers()) {
+            for (ServerPlayer p : holder.level().getServer().getPlayerList().getPlayers()) {
                 p.connection.send(packet);
             }
         }
-        holder.serverLevel().playSound(null, held.getX(), held.getY(), held.getZ(),
+        holder.level().playSound(null, held.getX(), held.getY(), held.getZ(),
                 SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 0.8f);
         return true;
     }
     public static boolean tryEscape(ServerPlayer held) {
         UUID holderId = heldBy.get(held.getUUID());
         if (holderId == null) return false;
-        ServerPlayer holder = held.getServer().getPlayerList().getPlayer(holderId);
+        ServerPlayer holder = held.level().getServer().getPlayerList().getPlayer(holderId);
         if (holder != null && isInShieldMode(holderId)) {
-            holder.removeEffect(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN);
+            holder.removeEffect(net.minecraft.world.effect.MobEffects.SLOWNESS);
         }
         held.stopRiding();
         cleanupGrab(holderId);
         PoseNetworking.poseStates.put(held.getUUID(), PoseState.NONE);
         if (holder != null) {
             PoseNetworking.poseStates.put(holder.getUUID(), PoseState.NONE);
-            PoseNetworking.broadcastPoseChange(held.getServer(), holder.getUUID(), PoseState.NONE);
+            PoseNetworking.broadcastPoseChange(held.level().getServer(), holder.getUUID(), PoseState.NONE);
             PoseNetworking.broadcastAnimState(holder, 0);
         }
-        if (held.getServer() != null) {
-            PoseNetworking.broadcastPoseChange(held.getServer(), held.getUUID(), PoseState.NONE);
+        if (held.level().getServer() != null) {
+            PoseNetworking.broadcastPoseChange(held.level().getServer(), held.getUUID(), PoseState.NONE);
             PoseNetworking.broadcastAnimState(held, 0);
-            GrabNetworking.broadcastGrabState(held.getServer(), holderId, held.getUUID(), false);
+            GrabNetworking.broadcastGrabState(held.level().getServer(), holderId, held.getUUID(), false);
             if (holder != null) {
                 ClientboundSetPassengersPacket packet = new ClientboundSetPassengersPacket(holder);
-                for (ServerPlayer p : held.getServer().getPlayerList().getPlayers()) {
+                for (ServerPlayer p : held.level().getServer().getPlayerList().getPlayers()) {
                     p.connection.send(packet);
                 }
             }
             Vec3 escapePos = held.position().add(0, 0.1, 0);
-            held.teleportTo(escapePos.x, escapePos.y, escapePos.z);
+            com.cooptest.neoforge.PlayerActions.teleport(held, escapePos.x, escapePos.y, escapePos.z);
         }
-        held.serverLevel().playSound(null, held.getX(), held.getY(), held.getZ(),
+        held.level().playSound(null, held.getX(), held.getY(), held.getZ(),
                 SoundEvents.PLAYER_ATTACK_WEAK, SoundSource.PLAYERS, 0.8f, 1.2f);
         return true;
     }
@@ -581,7 +581,7 @@ public class GrabMechanic {
         thrownPlayers.remove(playerUuid);
     }
     private static void spawnFireTrail(ServerPlayer player, ThrownPlayerData data) {
-        ServerLevel world = player.serverLevel();
+        ServerLevel world = player.level();
         Vec3 pos = player.position();
         world.sendParticles(ParticleTypes.FLAME,
                 pos.x, pos.y + 0.5, pos.z,
@@ -606,7 +606,7 @@ public class GrabMechanic {
         }
     }
     private static void checkForNearbyCreepers(ServerPlayer player) {
-        ServerLevel world = player.serverLevel();
+        ServerLevel world = player.level();
         double checkRadius = 4.0;
         var nearbyCreepers = world.getEntitiesOfClass(
                 net.minecraft.world.entity.monster.Creeper.class,
@@ -640,11 +640,11 @@ public class GrabMechanic {
                     ghastPos.x, ghastPos.y, ghastPos.z, 30, 1.5, 1.5, 1.5, 0.1);
             world.sendParticles(ParticleTypes.FLAME,
                     ghastPos.x, ghastPos.y, ghastPos.z, 20, 1.0, 1.0, 1.0, 0.2);
-            player.displayClientMessage(net.minecraft.network.chat.Component.literal("§6§l💥 GHAST OBLITERATED! 💥"), true);
+            com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal("§6§l💥 GHAST OBLITERATED! 💥"), true);
         }
     }
     private static void createFireExplosion(ServerPlayer player) {
-        ServerLevel world = player.serverLevel();
+        ServerLevel world = player.level();
         Vec3 pos = player.position();
         world.explode(
                 player,
@@ -657,9 +657,9 @@ public class GrabMechanic {
                 ModSounds.EXPLOSION_IMPACT, SoundSource.PLAYERS, 1.5f, 1.0f);
         player.hurt(world.damageSources().onFire(), 16.0f);
         for (int i = 0; i < 20; i++) {
-            double offsetX = (world.random.nextDouble() - 0.5) * 3;
-            double offsetY = world.random.nextDouble() * 2;
-            double offsetZ = (world.random.nextDouble() - 0.5) * 3;
+            double offsetX = (world.getRandom().nextDouble() - 0.5) * 3;
+            double offsetY = world.getRandom().nextDouble() * 2;
+            double offsetZ = (world.getRandom().nextDouble() - 0.5) * 3;
             world.sendParticles(ParticleTypes.FLAME,
                     pos.x + offsetX, pos.y + offsetY, pos.z + offsetZ,
                     1, 0, 0, 0, 0.1);
@@ -747,26 +747,26 @@ public class GrabMechanic {
         Long cooldownEnd = shieldSwapCooldown.get(holderId);
         if (cooldownEnd != null && System.currentTimeMillis() < cooldownEnd) {
             long remaining = (cooldownEnd - System.currentTimeMillis()) / 100;
-            holder.displayClientMessage(net.minecraft.network.chat.Component.literal("§cSwap cooldown! " + (remaining / 10.0) + "s"), true);
+            com.cooptest.neoforge.PlayerActions.message(holder, net.minecraft.network.chat.Component.literal("§cSwap cooldown! " + (remaining / 10.0) + "s"), true);
             return false;
         }
         UUID heldId = holding.get(holderId);
-        ServerPlayer held = holder.getServer().getPlayerList().getPlayer(heldId);
+        ServerPlayer held = holder.level().getServer().getPlayerList().getPlayer(heldId);
         if (held == null) return false;
         boolean currentMode = shieldMode.getOrDefault(holderId, false);
         boolean newMode = !currentMode;
         shieldMode.put(holderId, newMode);
         shieldSwapCooldown.put(holderId, System.currentTimeMillis() + SHIELD_SWAP_COOLDOWN_MS);
         if (newMode) {
-            holder.displayClientMessage(net.minecraft.network.chat.Component.literal("§b🛡 HUMAN SHIELD MODE"), true);
-            held.displayClientMessage(net.minecraft.network.chat.Component.literal("§c⚠ You are now a SHIELD!"), true);
+            com.cooptest.neoforge.PlayerActions.message(holder, net.minecraft.network.chat.Component.literal("§b🛡 HUMAN SHIELD MODE"), true);
+            com.cooptest.neoforge.PlayerActions.message(held, net.minecraft.network.chat.Component.literal("§c⚠ You are now a SHIELD!"), true);
             held.stopRiding();
-            ServerLevel world = holder.serverLevel();
+            ServerLevel world = holder.level();
             double yaw = Math.toRadians(holder.getYRot());
             double forwardX = -Math.sin(yaw) * 0.8;
             double forwardZ = Math.cos(yaw) * 0.8;
             net.minecraft.world.entity.decoration.ArmorStand armorStand = new net.minecraft.world.entity.decoration.ArmorStand(
-                    net.minecraft.world.entity.EntityType.ARMOR_STAND, world);
+                    net.minecraft.world.entity.EntityTypes.ARMOR_STAND, world);
             armorStand.setPos(
                     holder.getX() + forwardX,
                     holder.getY() - 0.5,
@@ -778,50 +778,50 @@ public class GrabMechanic {
             armorStand.setSilent(true);
             world.addFreshEntity(armorStand);
             shieldArmorStands.put(holderId, armorStand);
-            held.startRiding(armorStand, true);
+            held.startRiding(armorStand, true, true);
             world.playSound(null, holder.getX(), holder.getY(), holder.getZ(),
                     SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.0f, 1.2f);
             holder.addEffect(new net.minecraft.world.effect.MobEffectInstance(
-                    net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 999999, 1, false, false, true));
+                    net.minecraft.world.effect.MobEffects.SLOWNESS, 999999, 1, false, false, true));
             PoseNetworking.poseStates.put(heldId, PoseState.NONE);
-            PoseNetworking.broadcastPoseChange(holder.getServer(), heldId, PoseState.NONE);
+            PoseNetworking.broadcastPoseChange(holder.level().getServer(), heldId, PoseState.NONE);
             PoseNetworking.poseStates.put(holderId, PoseState.NONE);
             PoseNetworking.broadcastAnimState(held, 29);
             PoseNetworking.broadcastAnimState(holder, 28);
             ClientboundSetPassengersPacket holderPacket = new ClientboundSetPassengersPacket(holder);
-            for (ServerPlayer p : holder.getServer().getPlayerList().getPlayers()) {
+            for (ServerPlayer p : holder.level().getServer().getPlayerList().getPlayers()) {
                 p.connection.send(holderPacket);
             }
             net.minecraft.world.entity.decoration.ArmorStand as = shieldArmorStands.get(holderId);
             if (as != null) {
                 ClientboundSetPassengersPacket asPacket = new ClientboundSetPassengersPacket(as);
-                for (ServerPlayer p : holder.getServer().getPlayerList().getPlayers()) {
+                for (ServerPlayer p : holder.level().getServer().getPlayerList().getPlayers()) {
                     p.connection.send(asPacket);
                 }
             }
-            broadcastShieldMode(holder.getServer(), holderId, heldId, true);
+            broadcastShieldMode(holder.level().getServer(), holderId, heldId, true);
         } else {
-            holder.displayClientMessage(net.minecraft.network.chat.Component.literal("§e YEET"), true);
-            held.displayClientMessage(net.minecraft.network.chat.Component.literal("§eBack to throw mode"), true);
+            com.cooptest.neoforge.PlayerActions.message(holder, net.minecraft.network.chat.Component.literal("§e YEET"), true);
+            com.cooptest.neoforge.PlayerActions.message(held, net.minecraft.network.chat.Component.literal("§eBack to throw mode"), true);
             held.stopRiding();
             net.minecraft.world.entity.decoration.ArmorStand armorStand = shieldArmorStands.remove(holderId);
             if (armorStand != null) {
                 armorStand.discard();
             }
             if (!holder.isPassenger() || holder.getVehicle() != held) {
-                held.startRiding(holder, true);
+                held.startRiding(holder, true, true);
             }
             PoseNetworking.poseStates.put(heldId, PoseState.GRABBED);
-            PoseNetworking.broadcastPoseChange(held.getServer(), heldId, PoseState.GRABBED);
+            PoseNetworking.broadcastPoseChange(held.level().getServer(), heldId, PoseState.GRABBED);
             PoseNetworking.broadcastAnimState(holder, 3);
-            holder.removeEffect(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN);
+            holder.removeEffect(net.minecraft.world.effect.MobEffects.SLOWNESS);
             ClientboundSetPassengersPacket holderPacket = new ClientboundSetPassengersPacket(holder);
-            for (ServerPlayer p : holder.getServer().getPlayerList().getPlayers()) {
+            for (ServerPlayer p : holder.level().getServer().getPlayerList().getPlayers()) {
                 p.connection.send(holderPacket);
             }
-            holder.serverLevel().playSound(null, holder.getX(), holder.getY(), holder.getZ(),
+            holder.level().playSound(null, holder.getX(), holder.getY(), holder.getZ(),
                     SoundEvents.ARMOR_EQUIP_LEATHER, SoundSource.PLAYERS, 1.0f, 1.0f);
-            broadcastShieldMode(holder.getServer(), holderId, heldId, false);
+            broadcastShieldMode(holder.level().getServer(), holderId, heldId, false);
         }
         return true;
     }
@@ -849,16 +849,16 @@ public class GrabMechanic {
                 iterator.remove();
                 shieldMode.remove(holderId);
                 shieldSwapCooldown.remove(holderId);
-                holder.removeEffect(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN);
+                holder.removeEffect(net.minecraft.world.effect.MobEffects.SLOWNESS);
                 PoseNetworking.poseStates.put(holderId, PoseState.NONE);
-                PoseNetworking.broadcastPoseChange(holder.getServer(), holderId, PoseState.NONE);
+                PoseNetworking.broadcastPoseChange(holder.level().getServer(), holderId, PoseState.NONE);
                 PoseNetworking.broadcastAnimState(holder, 0);
                 GrabNetworking.broadcastGrabState(server, holderId, heldId, false);
                 ClientboundSetPassengersPacket packet = new ClientboundSetPassengersPacket(holder);
                 for (ServerPlayer p : server.getPlayerList().getPlayers()) {
                     p.connection.send(packet);
                 }
-                holder.displayClientMessage(net.minecraft.network.chat.Component.literal("§c Shield dropped!"), true);
+                com.cooptest.neoforge.PlayerActions.message(holder, net.minecraft.network.chat.Component.literal("§c Shield dropped!"), true);
                 continue;
             }
             ServerPlayer heldPlayer = server.getPlayerList().getPlayer(heldId);
@@ -869,16 +869,16 @@ public class GrabMechanic {
                 shieldSwapCooldown.remove(holderId);
                 holding.remove(holderId);
                 heldBy.remove(heldId);
-                holder.removeEffect(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN);
+                holder.removeEffect(net.minecraft.world.effect.MobEffects.SLOWNESS);
                 PoseNetworking.poseStates.put(holderId, PoseState.NONE);
-                PoseNetworking.broadcastPoseChange(holder.getServer(), holderId, PoseState.NONE);
+                PoseNetworking.broadcastPoseChange(holder.level().getServer(), holderId, PoseState.NONE);
                 PoseNetworking.broadcastAnimState(holder, 0);
                 GrabNetworking.broadcastGrabState(server, holderId, heldId, false);
                 ClientboundSetPassengersPacket packet = new ClientboundSetPassengersPacket(holder);
                 for (ServerPlayer p : server.getPlayerList().getPlayers()) {
                     p.connection.send(packet);
                 }
-                holder.displayClientMessage(net.minecraft.network.chat.Component.literal("§c Shield died!"), true);
+                com.cooptest.neoforge.PlayerActions.message(holder, net.minecraft.network.chat.Component.literal("§c Shield died!"), true);
                 continue;
             }
             double yaw = Math.toRadians(holder.getYRot());
@@ -898,10 +898,10 @@ public class GrabMechanic {
                         new PoseNetworking.AnimStateSyncPayload(shieldPlayer.getUUID(), 29);
                 ServerPlayNetworking.send(holder, animPayload);
                 net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket posPacket =
-                        new net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket(shieldPlayer);
+                        net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket.teleport(shieldPlayer.getId(), net.minecraft.world.entity.PositionMoveRotation.of(shieldPlayer), java.util.Set.of(), shieldPlayer.onGround());
                 holder.connection.send(posPacket);
                 net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket standPacket =
-                        new net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket(armorStand);
+                        net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket.teleport(armorStand.getId(), net.minecraft.world.entity.PositionMoveRotation.of(armorStand), java.util.Set.of(), armorStand.onGround());
                 holder.connection.send(standPacket);
             }
         }
@@ -913,7 +913,7 @@ public class GrabMechanic {
         if (!isInShieldMode(holder.getUUID())) return null;
         UUID heldId = holding.get(holder.getUUID());
         if (heldId == null) return null;
-        return holder.getServer().getPlayerList().getPlayer(heldId);
+        return holder.level().getServer().getPlayerList().getPlayer(heldId);
     }
     private static void broadcastShieldMode(net.minecraft.server.MinecraftServer server, UUID holderId, UUID heldId, boolean enabled) {
         ShieldModePayload payload = new ShieldModePayload(holderId, heldId, enabled);
@@ -936,7 +936,7 @@ public class GrabMechanic {
     }
     public record ShieldModePayload(UUID holderId, UUID heldId, boolean enabled) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<ShieldModePayload> ID =
-                new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath("testcoop", "shield_mode"));
+                new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath("testcoop", "shield_mode"));
         @Override
         public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
             return ID;

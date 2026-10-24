@@ -7,7 +7,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -32,7 +32,7 @@ public class HighFiveHugHandler {
         HUGGING,
         ENDING
     }
-    public static final ResourceLocation HUG_HOLD_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "hug_hold");
+    public static final Identifier HUG_HOLD_ID = Identifier.fromNamespaceAndPath("cooptest", "hug_hold");
     public record HugHoldPayload() implements CustomPacketPayload {
         public static final Type<HugHoldPayload> ID = new Type<>(HUG_HOLD_ID);
         public static final StreamCodec<FriendlyByteBuf, HugHoldPayload> CODEC =
@@ -74,7 +74,7 @@ public class HighFiveHugHandler {
         }
         UUID partnerId = hugPartner.get(playerId);
         if (partnerId == null) return;
-        ServerPlayer partner = player.getServer().getPlayerList().getPlayer(partnerId);
+        ServerPlayer partner = player.level().getServer().getPlayerList().getPlayer(partnerId);
         if (partner == null) return;
         Long partnerHoldStart = hugHoldStart.get(partnerId);
         if (partnerHoldStart == null) return;
@@ -88,7 +88,7 @@ public class HighFiveHugHandler {
         }
         double distance = player.position().distanceTo(partner.position());
         if (distance > HUG_DISTANCE) {
-            player.displayClientMessage(Component.literal("§c❤ Get closer to hug! ❤"), true);
+            com.cooptest.neoforge.PlayerActions.message(player, Component.literal("§c❤ Get closer to hug! ❤"), true);
             return;
         }
         startHug(player, partner);
@@ -105,8 +105,8 @@ public class HighFiveHugHandler {
         hugStartTime.put(id2, now);
         PoseNetworking.broadcastAnimState(p1, 32);
         PoseNetworking.broadcastAnimState(p2, 32);
-        p1.displayClientMessage(Component.literal("§d❤ Hugging... ❤"), true);
-        p2.displayClientMessage(Component.literal("§d❤ Hugging... ❤"), true);
+        com.cooptest.neoforge.PlayerActions.message(p1, Component.literal("§d❤ Hugging... ❤"), true);
+        com.cooptest.neoforge.PlayerActions.message(p2, Component.literal("§d❤ Hugging... ❤"), true);
     }
     private static void tick(MinecraftServer server) {
         long now = System.currentTimeMillis();
@@ -177,8 +177,8 @@ public class HighFiveHugHandler {
                     Vec3 offset = direction.scale(targetDistance / 2.0);
                     Vec3 targetPlayer = midpoint.subtract(offset);
                     Vec3 targetPartner = midpoint.add(offset);
-                    player.teleportTo(player.serverLevel(), targetPlayer.x, targetPlayer.y, targetPlayer.z, player.getYRot(), player.getXRot());
-                    partner.teleportTo(partner.serverLevel(), targetPartner.x, targetPartner.y, targetPartner.z, partner.getYRot(), partner.getXRot());
+                    com.cooptest.neoforge.PlayerActions.teleport(player, player.level(), targetPlayer.x, targetPlayer.y, targetPlayer.z, player.getYRot(), player.getXRot());
+                    com.cooptest.neoforge.PlayerActions.teleport(partner, partner.level(), targetPartner.x, targetPartner.y, targetPartner.z, partner.getYRot(), partner.getXRot());
                 } else if (distance > HUG_DISTANCE + 0.5) {
                     stateChanges.add(() -> endHug(player, partner));
                     continue;
@@ -225,7 +225,7 @@ public class HighFiveHugHandler {
         p2.addEffect(new MobEffectInstance(
                 MobEffects.REGENERATION, 40, 1, false, false));
         Vec3 pos = p1.position().add(p2.position()).scale(0.5).add(0, 1, 0);
-        ServerLevel world = p1.serverLevel();
+        ServerLevel world = p1.level();
         world.sendParticles(ParticleTypes.HEART,
                 pos.x, pos.y, pos.z,
                 5, 0.3, 0.3, 0.3, 0.1);
@@ -242,8 +242,8 @@ public class HighFiveHugHandler {
         hugStartTime.put(id2, now);
         PoseNetworking.broadcastAnimState(p1, 35);
         PoseNetworking.broadcastAnimState(p2, 35);
-        p1.displayClientMessage(Component.literal("§e Hug ended "), true);
-        p2.displayClientMessage(Component.literal("§e Hug ended "), true);
+        com.cooptest.neoforge.PlayerActions.message(p1, Component.literal("§e Hug ended "), true);
+        com.cooptest.neoforge.PlayerActions.message(p2, Component.literal("§e Hug ended "), true);
     }
     public static boolean isInHugFreeze(UUID playerId) {
         HugState state = hugState.get(playerId);

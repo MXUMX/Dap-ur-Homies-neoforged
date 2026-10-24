@@ -7,14 +7,14 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.phys.Vec3;
 public class PoseEffects {
     public static void playIdleEffects(ServerPlayer player) {
-        ServerLevel world = player.serverLevel();
+        ServerLevel world = player.level();
         Vec3 pos = player.position();
         world.playSound(null, pos.x, pos.y, pos.z,
                 SoundEvents.PLAYER_ATTACK_SWEEP,
                 SoundSource.PLAYERS, 1.0f, 1.2f);
     }
     public static void playActionEffects(ServerPlayer pusher, ServerPlayer target) {
-        ServerLevel world = pusher.serverLevel();
+        ServerLevel world = pusher.level();
         Vec3 pusherPos = pusher.position();
         Vec3 targetPos = target.position();
         float yaw = pusher.getYRot();
@@ -62,7 +62,7 @@ public class PoseEffects {
         pusher.hurtMarked = true;
     }
     public static void playLaunchTrailEffects(ServerPlayer target) {
-        ServerLevel world = target.serverLevel();
+        ServerLevel world = target.level();
         Vec3 pos = target.position();
         world.sendParticles(ParticleTypes.CLOUD,
                 pos.x, pos.y + 0.5, pos.z,

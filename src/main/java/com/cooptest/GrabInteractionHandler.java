@@ -5,7 +5,7 @@ import net.minecraft.world.InteractionResult;
 public class GrabInteractionHandler {
     public static void register() {
         UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
-            if (world.isClientSide) return InteractionResult.PASS;
+            if (world.isClientSide()) return InteractionResult.PASS;
             if (!(player instanceof ServerPlayer clicker)) return InteractionResult.PASS;
             if (!(entity instanceof ServerPlayer target)) return InteractionResult.PASS;
             PoseState targetPose = PoseNetworking.poseStates.getOrDefault(target.getUUID(), PoseState.NONE);

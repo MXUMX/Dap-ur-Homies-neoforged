@@ -9,9 +9,9 @@ public class SitClientHandler {
     private static boolean wasFHeld = false;
     public static void register() {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (client.player == null || client.screen != null) return;
+            if (client.player == null || client.gui.screen() != null) return;
             boolean fHeld = InputConstants.isKeyDown(
-                    net.minecraft.client.Minecraft.getInstance().getWindow().getWindow(),
+                    net.minecraft.client.Minecraft.getInstance().getWindow(),
                     GLFW.GLFW_KEY_F);
             if (fHeld != wasFHeld) {
                 wasFHeld = fHeld;

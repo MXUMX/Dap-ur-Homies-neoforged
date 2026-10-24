@@ -7,7 +7,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -33,12 +33,12 @@ public class KickHandler {
     private static final long   KICK_ANIM_MS          = 1000L;
     private static final long   DROP_KICK_ANIM_MS     = 1750L;
     private static final long   DROP_KICK_SLOW_DELAY  = 830L;
-    private static final ResourceLocation KICK_SLOW_ID = ResourceLocation.fromNamespaceAndPath("testcoop", "kick_slow");
+    private static final Identifier KICK_SLOW_ID = Identifier.fromNamespaceAndPath("testcoop", "kick_slow");
     private static final int ANIM_KICK      = 61;
     private static final int ANIM_DROP_KICK = 62;
     public record KickStartPayload(boolean dropKickMode) implements CustomPacketPayload {
         public static final Type<KickStartPayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("testcoop", "kick_start"));
+                new Type<>(Identifier.fromNamespaceAndPath("testcoop", "kick_start"));
         public static final StreamCodec<FriendlyByteBuf, KickStartPayload> CODEC =
                 StreamCodec.ofMember(
                         (val, buf) -> buf.writeBoolean(val.dropKickMode()),
@@ -48,7 +48,7 @@ public class KickHandler {
     }
     public record KickReleasePayload() implements CustomPacketPayload {
         public static final Type<KickReleasePayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("testcoop", "kick_release"));
+                new Type<>(Identifier.fromNamespaceAndPath("testcoop", "kick_release"));
         public static final StreamCodec<FriendlyByteBuf, KickReleasePayload> CODEC =
                 StreamCodec.unit(new KickReleasePayload());
         @Override public Type<KickReleasePayload> type() { return ID; }
@@ -56,7 +56,7 @@ public class KickHandler {
     public record KickChargeSyncPayload(UUID playerId, boolean isCharging, float chargePercent)
             implements CustomPacketPayload {
         public static final Type<KickChargeSyncPayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("testcoop", "kick_charge_sync"));
+                new Type<>(Identifier.fromNamespaceAndPath("testcoop", "kick_charge_sync"));
         public static final StreamCodec<FriendlyByteBuf, KickChargeSyncPayload> CODEC =
                 StreamCodec.ofMember(
                         (val, buf) -> {
@@ -70,7 +70,7 @@ public class KickHandler {
     }
     public record KickCooldownPayload(long cooldownMs) implements CustomPacketPayload {
         public static final Type<KickCooldownPayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("testcoop", "kick_cooldown"));
+                new Type<>(Identifier.fromNamespaceAndPath("testcoop", "kick_cooldown"));
         public static final StreamCodec<FriendlyByteBuf, KickCooldownPayload> CODEC =
                 StreamCodec.ofMember(
                         (val, buf) -> buf.writeLong(val.cooldownMs()),
@@ -80,7 +80,7 @@ public class KickHandler {
     }
     public record KickResultPayload(boolean isDropKick, boolean hit) implements CustomPacketPayload {
         public static final Type<KickResultPayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("testcoop", "kick_result"));
+                new Type<>(Identifier.fromNamespaceAndPath("testcoop", "kick_result"));
         public static final StreamCodec<FriendlyByteBuf, KickResultPayload> CODEC =
                 StreamCodec.ofMember(
                         (val, buf) -> {
@@ -167,7 +167,7 @@ public class KickHandler {
                 if (player == null || fwd == null) { pushWindowIt.remove(); continue; }
                 float reach = (float)(KickHandler.KICK_RANGE + 0.5);
                 AABB box = player.getBoundingBox().inflate(reach + 0.3);
-                for (var target : player.serverLevel().getEntities(player, box,
+                for (var target : player.level().getEntities(player, box,
                         e -> e instanceof LivingEntity && !e.isRemoved())) {
                     double dx = target.getX() - player.getX(), dz = target.getZ() - player.getZ();
                     double dist = Math.sqrt(dx*dx + dz*dz);
@@ -203,7 +203,7 @@ public class KickHandler {
     }
     private static void executeKick(ServerPlayer player, boolean isDropKick) {
         UUID id       = player.getUUID();
-        ServerLevel world = player.serverLevel();
+        ServerLevel world = player.level();
         float  reach      = isDropKick ? DROP_KICK_RANGE       : KICK_RANGE;
         float  damage     = isDropKick ? DROP_KICK_DAMAGE      : KICK_DAMAGE;
         double kbStrength = isDropKick ? DROP_KICK_KB_STRENGTH : KICK_KB_STRENGTH;
@@ -228,7 +228,7 @@ public class KickHandler {
                 if (isDropKick) {
                     living.setDeltaMovement(fwdX * 4.0, 0.8, fwdZ * 4.0);
                 } else {
-                    living.knockback(kbStrength, -dx, -dz);
+                    living.knockback(kbStrength, -dx, -dz, world.damageSources().playerAttack(player), damage);
                     Vec3 vel2 = living.getDeltaMovement();
                     living.setDeltaMovement(vel2.x, upwardPop, vel2.z);
                 }
@@ -316,7 +316,7 @@ public class KickHandler {
     }
     private static void broadcastChargeSync(ServerPlayer player, boolean isCharging, float pct) {
         KickChargeSyncPayload pkt = new KickChargeSyncPayload(player.getUUID(), isCharging, pct);
-        for (ServerPlayer other : PlayerLookup.around(player.serverLevel(), player.position(), 30)) {
+        for (ServerPlayer other : PlayerLookup.around(player.level(), player.position(), 30)) {
             ServerPlayNetworking.send(other, pkt);
         }
         ServerPlayNetworking.send(player, pkt);

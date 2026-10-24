@@ -29,13 +29,13 @@ public class GrabInputHandler {
     public static final Map<UUID, Boolean> clientShieldMode = new HashMap<>();
     public static void register() {
         grabKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
-                "key.coopmoves.grab", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "category.coopmoves"
+                "key.coopmoves.grab", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper.CATEGORY
         ));
         throwKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
-                "key.coopmoves.throw", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_T, "category.coopmoves"
+                "key.coopmoves.throw", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_T, net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper.CATEGORY
         ));
         shieldKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
-                "key.coopmoves.shield", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, "category.coopmoves"
+                "key.coopmoves.shield", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper.CATEGORY
         ));
         ClientPlayNetworking.registerGlobalReceiver(GrabMechanic.ShieldModePayload.ID,
                 (payload, context) -> {
@@ -54,8 +54,8 @@ public class GrabInputHandler {
             boolean isJumpPressed = client.options.keyJump.isDown();
             if (isJumpPressed && !wasJumpPressed) {
                 if (pose == PoseState.GRABBED && !client.player.isPassenger()) {
-                    if (client.player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.CHEST).getItem()
-                            instanceof net.minecraft.world.item.ElytraItem) {
+                    if (client.player.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.CHEST)
+                            .has(net.minecraft.core.component.DataComponents.GLIDER)) {
                         ClientPlayNetworking.send(new GrabNetworking.ElytraBoostRequestPayload());
                     }
                 }

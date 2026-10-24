@@ -5,7 +5,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
@@ -22,7 +22,7 @@ public class MarioJumpHandler {
     private static final double LAUNCH_VELOCITY = 0.68;
     public record MarioJumpRequestPayload() implements CustomPacketPayload {
         public static final Type<MarioJumpRequestPayload> ID =
-                new Type<>(ResourceLocation.fromNamespaceAndPath("testcoop", "mario_jump_request"));
+                new Type<>(Identifier.fromNamespaceAndPath("testcoop", "mario_jump_request"));
         public static final StreamCodec<FriendlyByteBuf, MarioJumpRequestPayload> CODEC =
                 StreamCodec.unit(new MarioJumpRequestPayload());
         @Override
@@ -82,7 +82,7 @@ public class MarioJumpHandler {
         jumpCooldown.put(jumperId, now);
     }
     private static ServerPlayer findPlayerBelow(ServerPlayer jumper) {
-        ServerLevel world = jumper.serverLevel();
+        ServerLevel world = jumper.level();
         Vec3 jumperPos = jumper.position();
         double jumperFeetY = jumperPos.y;
         AABB searchBox = new AABB(
@@ -110,7 +110,7 @@ public class MarioJumpHandler {
         return null;
     }
     private static void executeMarioJump(ServerPlayer jumper, ServerPlayer target) {
-        ServerLevel world = jumper.serverLevel();
+        ServerLevel world = jumper.level();
         Vec3 pos = jumper.position();
         long now = System.currentTimeMillis();
         System.out.println("[MARIO JUMP] Executing mario jump!");
@@ -128,8 +128,8 @@ public class MarioJumpHandler {
         popAnimEnd.put(target.getUUID(), now + POP_ANIM_DURATION_MS);
         world.playSound(null, pos.x, pos.y, pos.z,
                 ModSounds.MARIO_JUMP, SoundSource.PLAYERS, 1.0f, 1.0f);
-        jumper.displayClientMessage(net.minecraft.network.chat.Component.literal("§a WAHOO!"), true);
-        target.displayClientMessage(net.minecraft.network.chat.Component.literal("§c BONK!"), true);
+        com.cooptest.neoforge.PlayerActions.message(jumper, net.minecraft.network.chat.Component.literal("§a WAHOO!"), true);
+        com.cooptest.neoforge.PlayerActions.message(target, net.minecraft.network.chat.Component.literal("§c BONK!"), true);
     }
     public static void cleanup(UUID playerId) {
         jumpCooldown.remove(playerId);

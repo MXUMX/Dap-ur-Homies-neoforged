@@ -4,7 +4,7 @@ import com.cooptest.PoseState;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 public class ThrowPowerHUD {
     private static final int BAR_WIDTH = 100;
     private static final int BAR_HEIGHT = 8;
@@ -20,7 +20,7 @@ public class ThrowPowerHUD {
     public static void register() {
         HudRenderCallback.EVENT.register(ThrowPowerHUD::render);
     }
-    private static void render(GuiGraphics context, DeltaTracker tickCounter) {
+    private static void render(GuiGraphicsExtractor context, DeltaTracker tickCounter) {
         Minecraft client = Minecraft.getInstance();
         if (client.player == null) return;
         PoseState pose = PoseNetworking.poseStates.getOrDefault(
@@ -40,7 +40,7 @@ public class ThrowPowerHUD {
         int barX = (screenWidth - BAR_WIDTH) / 2;
         int barY = (screenHeight / 2) + BAR_Y_OFFSET;
         context.fill(barX - 2, barY - 2, barX + BAR_WIDTH + 2, barY + BAR_HEIGHT + 2, BG_COLOR);
-        context.renderOutline(barX - 2, barY - 2, BAR_WIDTH + 4, BAR_HEIGHT + 4, BORDER_COLOR);
+        context.outline(barX - 2, barY - 2, BAR_WIDTH + 4, BAR_HEIGHT + 4, BORDER_COLOR);
         int fillWidth = (int)(BAR_WIDTH * displayedCharge);
         int fillColor = getChargeColor(displayedCharge);
         if (fillWidth > 0) {
@@ -54,7 +54,7 @@ public class ThrowPowerHUD {
             float pulse = (float)(Math.sin(System.currentTimeMillis() / 100.0) * 0.5 + 0.5);
             int alpha = (int)(155 + pulse * 100);
             int textColor = (alpha << 24) | 0xFFFFFF;
-            context.drawString(client.font, text, textX, textY, textColor, true);
+            context.text(client.font, text, textX, textY, textColor, true);
         }
     }
     private static int getChargeColor(float charge) {

@@ -2,6 +2,7 @@ package com.cooptest.mixin;
 
 import com.cooptest.PoseNetworking;
 import com.cooptest.PoseState;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -12,6 +13,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Entity.class)
 public class PlayerEntityPassengerOffsetMixin {
+
+    @ModifyExpressionValue(method = "startRiding(Lnet/minecraft/world/entity/Entity;ZZ)Z", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/world/entity/EntityType;canSerialize()Z"))
+    private boolean allowForcedPlayerMount(boolean serializable, Entity vehicle, boolean force, boolean sendEvents) {
+        // Players are not saved as entities, but cooperative grabs need them as vehicles.
+        return serializable || (force && (Object) this instanceof Player && vehicle instanceof Player);
+    }
 
     private static final double GRAB_OFFSET_FORWARD = 0.6;
     private static final double GRAB_OFFSET_UP      = 0.8;

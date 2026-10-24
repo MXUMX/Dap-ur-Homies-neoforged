@@ -13,10 +13,10 @@ public final class PlayerLookup {
     }
 
     public static Iterable<ServerPlayer> tracking(Entity entity) {
-        if (entity.getServer() == null) {
+        if (entity.level().getServer() == null) {
             return List.of();
         }
-        return entity.getServer().getPlayerList().getPlayers();
+        return entity.level().getServer().getPlayerList().getPlayers();
     }
 
     public static Iterable<ServerPlayer> all(MinecraftServer server) {

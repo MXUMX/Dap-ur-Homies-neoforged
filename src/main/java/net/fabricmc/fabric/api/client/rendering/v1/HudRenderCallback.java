@@ -1,6 +1,6 @@
 package net.fabricmc.fabric.api.client.rendering.v1;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.DeltaTracker;
 
 import java.util.List;
@@ -14,7 +14,7 @@ public final class HudRenderCallback {
 
     @FunctionalInterface
     public interface Callback {
-        void onHudRender(GuiGraphics drawContext, DeltaTracker tickCounter);
+        void onHudRender(GuiGraphicsExtractor drawContext, DeltaTracker tickCounter);
     }
 
     public static final class Event {
@@ -24,7 +24,7 @@ public final class HudRenderCallback {
             callbacks.add(callback);
         }
 
-        public void invoke(GuiGraphics drawContext, DeltaTracker tickCounter) {
+        public void invoke(GuiGraphicsExtractor drawContext, DeltaTracker tickCounter) {
             for (Callback callback : callbacks) {
                 callback.onHudRender(drawContext, tickCounter);
             }

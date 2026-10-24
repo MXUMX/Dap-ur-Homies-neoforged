@@ -28,8 +28,8 @@ public class SlapClientHandler {
                     Minecraft client = context.client();
                     if (client.player == null) return;
                     if (!client.player.getUUID().equals(payload.playerId())) return;
-                    if (client.screen != null) {
-                        client.setScreen(null);
+                    if (client.gui.screen() != null) {
+                        client.gui.setScreen(null);
                     }
                 }));
     }

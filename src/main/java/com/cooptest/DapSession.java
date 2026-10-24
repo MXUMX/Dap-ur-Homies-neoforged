@@ -88,7 +88,7 @@ public class DapSession {
         targetA = midpoint.subtract(direction.scale(halfDistance));
         targetB = midpoint.add(direction.scale(halfDistance));
         double targetY = Math.max(posA.y, posB.y);
-        ServerLevel world = playerA.serverLevel();
+        ServerLevel world = playerA.level();
         BlockPos groundPos = new BlockPos((int)midpoint.x, (int)targetY - 1, (int)midpoint.z);
         if (world.getBlockState(groundPos).isAir()) {
             targetY = Math.min(posA.y, posB.y);
@@ -109,9 +109,9 @@ public class DapSession {
                 lerp(currentB.y, targetB.y, lerpSpeed),
                 lerp(currentB.z, targetB.z, lerpSpeed)
         );
-        playerA.teleportTo(playerA.serverLevel(), newPosA.x, newPosA.y, newPosA.z,
+        com.cooptest.neoforge.PlayerActions.teleport(playerA, playerA.level(), newPosA.x, newPosA.y, newPosA.z,
                 playerA.getYRot(), playerA.getXRot());
-        playerB.teleportTo(playerB.serverLevel(), newPosB.x, newPosB.y, newPosB.z,
+        com.cooptest.neoforge.PlayerActions.teleport(playerB, playerB.level(), newPosB.x, newPosB.y, newPosB.z,
                 playerB.getYRot(), playerB.getXRot());
     }
     private void makeFaceEachOther(ServerPlayer playerA, ServerPlayer playerB) {
@@ -129,8 +129,8 @@ public class DapSession {
         playerB.setYBodyRot(yawB);
         playerB.setYHeadRot(yawB);
         playerB.yRotO = yawB;
-        playerA.teleportTo(playerA.serverLevel(), posA.x, posA.y, posA.z, yawA, playerA.getXRot());
-        playerB.teleportTo(playerB.serverLevel(), posB.x, posB.y, posB.z, yawB, playerB.getXRot());
+        com.cooptest.neoforge.PlayerActions.teleport(playerA, playerA.level(), posA.x, posA.y, posA.z, yawA, playerA.getXRot());
+        com.cooptest.neoforge.PlayerActions.teleport(playerB, playerB.level(), posB.x, posB.y, posB.z, yawB, playerB.getXRot());
     }
     private void checkPositioningComplete(ServerPlayer playerA, ServerPlayer playerB) {
         double distA = playerA.position().distanceTo(targetA);

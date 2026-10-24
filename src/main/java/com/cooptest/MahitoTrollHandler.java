@@ -7,7 +7,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -33,7 +33,7 @@ public class MahitoTrollHandler {
         }
     }
     public record MahitoAnimPayload(UUID playerId) implements CustomPacketPayload {
-        public static final Type<MahitoAnimPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "mahito_anim"));
+        public static final Type<MahitoAnimPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("cooptest", "mahito_anim"));
         public static final StreamCodec<FriendlyByteBuf, MahitoAnimPayload> CODEC = StreamCodec.ofMember(
                 (payload, buf) -> buf.writeUUID(payload.playerId),
                 buf -> new MahitoAnimPayload(buf.readUUID())
@@ -85,14 +85,14 @@ public class MahitoTrollHandler {
     private static void startMahitoTroll(ServerPlayer victim, ServerPlayer troller) {
         trolledPlayers.put(victim.getUUID(), new TrollData(System.currentTimeMillis(), troller.getUUID()));
         if (troller != null) {
-            troller.displayClientMessage(Component.literal("§c§l☠ You cursed " + victim.getName().getString() + "! ☠"), true);
+            com.cooptest.neoforge.PlayerActions.message(troller, Component.literal("§c§l☠ You cursed " + victim.getName().getString() + "! ☠"), true);
         }
     }
     private static void startTroll(ServerPlayer victim, ServerPlayer troller) {
-        ServerLevel world = victim.serverLevel();
-        victim.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 255, false, false));
+        ServerLevel world = victim.level();
+        victim.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 100, 255, false, false));
         victim.addEffect(new MobEffectInstance(MobEffects.LEVITATION, 100, 1, false, false));
-        victim.addEffect(new MobEffectInstance(MobEffects.JUMP, 100, 128, false, false));
+        victim.addEffect(new MobEffectInstance(MobEffects.JUMP_BOOST, 100, 128, false, false));
         world.playSound(null, victim.getX(), victim.getY(), victim.getZ(),
                 ModSounds.MAHITO, SoundSource.PLAYERS, 2.0f, 1.0f);
         for (ServerPlayer player : world.players()) {
@@ -102,20 +102,20 @@ public class MahitoTrollHandler {
                 20, 0.5, 1.0, 0.5, 0.02);
         world.sendParticles(ParticleTypes.SMOKE, victim.getX(), victim.getY() + 1, victim.getZ(),
                 15, 0.4, 0.8, 0.4, 0.01);
-        victim.displayClientMessage(Component.literal("§4§l☠ MAHITO'S CURSE! ☠"), true);
+        com.cooptest.neoforge.PlayerActions.message(victim, Component.literal("§4§l☠ MAHITO'S CURSE! ☠"), true);
         world.playSound(null, victim.getX(), victim.getY(), victim.getZ(),
                 SoundEvents.WITHER_SPAWN, SoundSource.PLAYERS, 0.5f, 1.5f);
     }
     private static void executeDeath(ServerPlayer victim) {
-        ServerLevel world = victim.serverLevel();
+        ServerLevel world = victim.level();
         double x = victim.getX();
         double y = victim.getY();
         double z = victim.getZ();
         world.sendParticles(ParticleTypes.EXPLOSION_EMITTER, x, y + 2, z, 1, 0, 0, 0, 0);
         world.sendParticles(ParticleTypes.FIREWORK, x, y + 2, z, 50, 0.5, 0.5, 0.5, 0.3);
-        world.sendParticles(ParticleTypes.FLASH, x, y + 2, z, 3, 0, 0, 0, 0);
+        world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF), x, y + 2, z, 3, 0, 0, 0, 0);
         world.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, x, y + 2, z, 30, 0.4, 0.4, 0.4, 0.15);
-        world.sendParticles(ParticleTypes.DRAGON_BREATH, x, y + 2, z, 20, 0.3, 0.3, 0.3, 0.1);
+        world.sendParticles(net.minecraft.core.particles.PowerParticleOption.create(ParticleTypes.DRAGON_BREATH, 1.0f), x, y + 2, z, 20, 0.3, 0.3, 0.3, 0.1);
         world.playSound(null, x, y, z,
                 SoundEvents.FIREWORK_ROCKET_LARGE_BLAST, SoundSource.PLAYERS, 2.0f, 1.0f);
         world.playSound(null, x, y, z,
@@ -125,7 +125,7 @@ public class MahitoTrollHandler {
         victim.hurt(world.damageSources().magic(), Float.MAX_VALUE);
         for (ServerPlayer player : world.players()) {
             if (player != victim) {
-                player.displayClientMessage(Component.literal("§4" + victim.getName().getString() + " §7was trolled by §cMahito's Curse!"), false);
+                com.cooptest.neoforge.PlayerActions.message(player, Component.literal("§4" + victim.getName().getString() + " §7was trolled by §cMahito's Curse!"), false);
             }
         }
     }

@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemInHandRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.world.entity.HumanoidArm;
 @Mixin(ItemInHandRenderer.class)
 public class HeldItemRendererMixin {
@@ -42,7 +42,7 @@ public class HeldItemRendererMixin {
     @Unique private static long throwStartTime = 0;
     @Unique private static boolean wasHolding = false;
     @Inject(method = "renderMapHand", at = @At("HEAD"))
-    private void onRenderArm(PoseStack matrices, MultiBufferSource vertexConsumers,
+    private void onRenderArm(PoseStack matrices, SubmitNodeCollector vertexConsumers,
                              int light, HumanoidArm arm, CallbackInfo ci) {
         Minecraft client = Minecraft.getInstance();
         if (client.player == null) return;

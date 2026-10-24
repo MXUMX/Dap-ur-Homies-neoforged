@@ -8,7 +8,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -28,7 +28,7 @@ public class FallCatchHandler {
     private static final Map<UUID, Long> catchReadyTime = new HashMap<>();
     private static final Map<UUID, Long> catchCooldowns = new HashMap<>();
     private static final Map<UUID, Boolean> successfulCatch = new HashMap<>();
-    public static final ResourceLocation CATCH_ANIM_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "catch_anim");
+    public static final Identifier CATCH_ANIM_ID = Identifier.fromNamespaceAndPath("cooptest", "catch_anim");
     public record CatchAnimPayload(UUID catcherId, UUID caughtId) implements CustomPacketPayload {
         public static final Type<CatchAnimPayload> ID = new Type<>(CATCH_ANIM_ID);
         public static final StreamCodec<FriendlyByteBuf, CatchAnimPayload> CODEC =
@@ -59,7 +59,7 @@ public class FallCatchHandler {
                         catchCooldowns.put(playerId, now + CATCH_COOLDOWN_MS);
                         ServerPlayer player = server.getPlayerList().getPlayer(playerId);
                         if (player != null) {
-                            player.displayClientMessage(net.minecraft.network.chat.Component.literal("§c✗ Catch missed! 1 sec cooldown"), true);
+                            com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal("§c✗ Catch missed! 1 sec cooldown"), true);
                         }
                     }
                     it.remove();
@@ -104,7 +104,7 @@ public class FallCatchHandler {
         return !isOnCatchCooldown(playerId);
     }
     private static ServerPlayer findCatcher(ServerPlayer fallingPlayer) {
-        ServerLevel world = fallingPlayer.serverLevel();
+        ServerLevel world = fallingPlayer.level();
         long now = System.currentTimeMillis();
         AABB searchBox = new AABB(
                 fallingPlayer.getX() - CATCH_RANGE_HORIZONTAL,
@@ -134,7 +134,7 @@ public class FallCatchHandler {
         return null;
     }
     private static void playCatchEffects(ServerPlayer caught, ServerPlayer catcher) {
-        ServerLevel world = catcher.serverLevel();
+        ServerLevel world = catcher.level();
         double x = (caught.getX() + catcher.getX()) / 2;
         double y = catcher.getY() + 1.5;
         double z = (caught.getZ() + catcher.getZ()) / 2;
@@ -159,9 +159,9 @@ public class FallCatchHandler {
         ServerPlayNetworking.send(catcher, payload);
         ServerPlayNetworking.send(caught, payload);
         PoseNetworking.poseStates.put(catcher.getUUID(), PoseState.NONE);
-        PoseNetworking.broadcastPoseChange(catcher.getServer(), catcher.getUUID(), PoseState.NONE);
-        caught.displayClientMessage(net.minecraft.network.chat.Component.literal("§a§l✓ " + catcher.getName().getString() + " caught you!"), true);
-        catcher.displayClientMessage(net.minecraft.network.chat.Component.literal("§a§l✓ PERFECT CATCH! " + caught.getName().getString()), true);
+        PoseNetworking.broadcastPoseChange(catcher.level().getServer(), catcher.getUUID(), PoseState.NONE);
+        com.cooptest.neoforge.PlayerActions.message(caught, net.minecraft.network.chat.Component.literal("§a§l✓ " + catcher.getName().getString() + " caught you!"), true);
+        com.cooptest.neoforge.PlayerActions.message(catcher, net.minecraft.network.chat.Component.literal("§a§l✓ PERFECT CATCH! " + caught.getName().getString()), true);
     }
     public static void cleanup(UUID playerId) {
         catchReadyTime.remove(playerId);

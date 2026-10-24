@@ -9,12 +9,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.UUID;
-import net.minecraft.client.model.PlayerModel;
+import net.minecraft.client.model.player.PlayerModel;
 import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 @Mixin(PlayerModel.class)
-public class PlayerModelMixin<T extends LivingEntity> {
+public class PlayerModelMixin {
     @Unique private static final float ANIMATION_SPEED = 0.2f;
     @Unique private static final float FAST_ANIMATION_SPEED = 0.35f;
     @Unique private static final float GRAB_READY_ARM_PITCH = -70f;
@@ -49,13 +47,14 @@ public class PlayerModelMixin<T extends LivingEntity> {
     @Unique private static final float SUPERMAN_LEFT_ARM_PITCH = 10f;
     @Unique private static final float SUPERMAN_LEFT_ARM_ROLL = 10f;
     @Unique private static final float SUPERMAN_LEG_ROLL = 5f;
-    @Inject(method = "setupAnim", at = @At("TAIL"))
-    private void injectPose(T entity, float f, float g, float h, float i, float j, CallbackInfo ci) {
-        if (!(entity instanceof Player player)) return;
-        UUID playerId = player.getUUID();
+    @Inject(method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;)V", at = @At("TAIL"))
+    private void injectPose(net.minecraft.client.renderer.entity.state.AvatarRenderState state, CallbackInfo ci) {
+        var snapshot = state.getRenderData(com.cooptest.client.PlayerPoseSnapshot.KEY);
+        if (snapshot == null) return;
+        UUID playerId = snapshot.id();
         PoseState pose = PoseNetworking.poseStates.getOrDefault(playerId, PoseState.NONE);
         PoseState lastPose = ArmPoseTracker.lastPose.getOrDefault(playerId, PoseState.NONE);
-        PlayerModel<?> model = (PlayerModel<?>) (Object) this;
+        PlayerModel model = (PlayerModel) (Object) this;
         ModelPart rightArm = model.rightArm;
         ModelPart leftArm = model.leftArm;
         ModelPart body = model.body;
@@ -66,10 +65,10 @@ public class PlayerModelMixin<T extends LivingEntity> {
         float baseLeftPitch = leftArm.xRot;
         float baseRightYaw = rightArm.yRot;
         float baseLeftYaw = leftArm.yRot;
-        boolean isSwinging = player.swinging;
-        boolean isUsingItem = player.isUsingItem();
+        boolean isSwinging = snapshot.swinging();
+        boolean isUsingItem = snapshot.usingItem();
         if (pose == PoseState.GRABBED) {
-            if (player.isPassenger() && !(player.getVehicle() instanceof Player)) {
+            if (snapshot.passenger() && !snapshot.playerVehicle()) {
                 ArmPoseTracker.lastPose.put(playerId, pose);
                 return;
             }
@@ -91,16 +90,10 @@ public class PlayerModelMixin<T extends LivingEntity> {
             leftLeg.xRot = 0;
             leftLeg.yRot = 0;
             leftLeg.zRot = (float) Math.toRadians(-SUPERMAN_LEG_ROLL);
-            model.rightSleeve.copyFrom(rightArm);
-            model.leftSleeve.copyFrom(leftArm);
-            model.rightPants.copyFrom(rightLeg);
-            model.leftPants.copyFrom(leftLeg);
-            model.jacket.copyFrom(body);
-            model.hat.copyFrom(head);
             ArmPoseTracker.lastPose.put(playerId, pose);
             return;
         }
-        if (pose == PoseState.NONE && !player.onGround() && !player.isPassenger()) {
+        if (pose == PoseState.NONE && !snapshot.onGround() && !snapshot.passenger()) {
             if (com.cooptest.GrabMechanic.isPlayerThrown(playerId)) {
                 body.xRot = 0;
                 body.yRot = 0;
@@ -120,12 +113,6 @@ public class PlayerModelMixin<T extends LivingEntity> {
                 leftLeg.xRot = 0;
                 leftLeg.yRot = 0;
                 leftLeg.zRot = (float) Math.toRadians(-SUPERMAN_LEG_ROLL);
-                model.rightSleeve.copyFrom(rightArm);
-                model.leftSleeve.copyFrom(leftArm);
-                model.rightPants.copyFrom(rightLeg);
-                model.leftPants.copyFrom(leftLeg);
-                model.jacket.copyFrom(body);
-                model.hat.copyFrom(head);
                 ArmPoseTracker.lastPose.put(playerId, pose);
                 return;
             }
@@ -166,7 +153,6 @@ public class PlayerModelMixin<T extends LivingEntity> {
                 rightArm.xRot = (float) Math.toRadians(-100f);
                 rightArm.yRot = (float) Math.toRadians(30f);
                 rightArm.zRot = 0f;
-                model.rightSleeve.copyFrom(rightArm);
                 ArmPoseTracker.lastPose.put(playerId, pose);
                 return;
             }
@@ -397,10 +383,7 @@ public class PlayerModelMixin<T extends LivingEntity> {
         boolean shouldApplyBodyLean = inThrowAnimation || (pose == PoseState.GRAB_HOLDING && isCharging);
         if (shouldApplyBodyLean && Math.abs(currBodyLean) > 0.01f) {
             body.xRot += currBodyLean;
-            model.jacket.copyFrom(body);
         }
-        model.rightSleeve.copyFrom(rightArm);
-        model.leftSleeve.copyFrom(leftArm);
         ArmPoseTracker.lastPose.put(playerId, pose);
     }
     @Unique

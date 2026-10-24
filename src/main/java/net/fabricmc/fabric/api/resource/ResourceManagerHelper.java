@@ -1,7 +1,7 @@
 package net.fabricmc.fabric.api.resource;
 
 import net.minecraft.server.packs.PackType;
-import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,9 +20,9 @@ public final class ResourceManagerHelper {
         CLIENT_LISTENERS.add(listener);
     }
 
-    public static void addReloadListeners(AddReloadListenerEvent event) {
+    public static void addReloadListeners(AddClientReloadListenersEvent event) {
         for (SimpleSynchronousResourceReloadListener listener : CLIENT_LISTENERS) {
-            event.addListener(listener);
+            event.addListener(listener.getFabricId(), listener);
         }
     }
 }

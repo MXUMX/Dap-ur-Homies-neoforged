@@ -15,7 +15,7 @@ public class FireSlapHandler {
     private static final double SLAP_VERTICAL = 0.5;
     public static void register() {
         AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
-            if (world.isClientSide) return InteractionResult.PASS;
+            if (world.isClientSide()) return InteractionResult.PASS;
             if (!(player instanceof ServerPlayer serverPlayer)) return InteractionResult.PASS;
             if (!(entity instanceof LivingEntity target)) return InteractionResult.PASS;
             if (entity instanceof Player) return InteractionResult.PASS;
@@ -26,7 +26,7 @@ public class FireSlapHandler {
         });
     }
     private static void executeFireSlap(ServerPlayer player, LivingEntity target) {
-        ServerLevel world = player.serverLevel();
+        ServerLevel world = player.level();
         Vec3 playerPos = player.position();
         Vec3 targetPos = target.position();
         Vec3 direction = targetPos.subtract(playerPos).normalize();
@@ -47,7 +47,7 @@ public class FireSlapHandler {
                 SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundSource.PLAYERS, 1.0f, 0.8f);
         world.playSound(null, x, y, z,
                 SoundEvents.BLAZE_HURT, SoundSource.PLAYERS, 0.5f, 1.2f);
-        player.displayClientMessage(net.minecraft.network.chat.Component.literal("§c FIRE SLAP! "), true);
+        com.cooptest.neoforge.PlayerActions.message(player, net.minecraft.network.chat.Component.literal("§c FIRE SLAP! "), true);
         ChargedDapHandler.fireLevel.put(player.getUUID(), 0.5f);
     }
 }

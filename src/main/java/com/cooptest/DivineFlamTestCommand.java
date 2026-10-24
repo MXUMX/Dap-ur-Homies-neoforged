@@ -15,7 +15,7 @@ public class DivineFlamTestCommand {
                         source.sendFailure(net.minecraft.network.chat.Component.literal("Must be a player!"));
                         return 0;
                     }
-                    ServerLevel world = player.serverLevel();
+                    ServerLevel world = player.level();
                     Vec3 pos = player.position().add(0, 1, 0);
                     Vec3 direction = player.getLookAngle();
                     TestPillar pillar = new TestPillar(world, pos, direction);

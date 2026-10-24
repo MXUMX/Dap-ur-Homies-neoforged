@@ -5,7 +5,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -15,7 +15,7 @@ public class PoseNetworking {
     public static final HashMap<UUID, PoseState> poseStates = new HashMap<>();
     public static final HashMap<UUID, Float> chargeProgress = new HashMap<>();
     public record PoseSyncPayload(UUID playerId, int poseOrdinal) implements CustomPacketPayload {
-        public static final Type<PoseSyncPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "pose_sync"));
+        public static final Type<PoseSyncPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("cooptest", "pose_sync"));
         public static final StreamCodec<FriendlyByteBuf, PoseSyncPayload> CODEC = StreamCodec.ofMember(
                 (payload, buf) -> {
                     buf.writeUUID(payload.playerId);
@@ -27,7 +27,7 @@ public class PoseNetworking {
         public Type<? extends CustomPacketPayload> type() { return ID; }
     }
     public record ChargeSyncPayload(UUID playerId, float progress) implements CustomPacketPayload {
-        public static final Type<ChargeSyncPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "charge_sync"));
+        public static final Type<ChargeSyncPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("cooptest", "charge_sync"));
         public static final StreamCodec<FriendlyByteBuf, ChargeSyncPayload> CODEC = StreamCodec.ofMember(
                 (payload, buf) -> {
                     buf.writeUUID(payload.playerId);
@@ -39,7 +39,7 @@ public class PoseNetworking {
         public Type<? extends CustomPacketPayload> type() { return ID; }
     }
     public record ThrowAnimPayload(UUID playerId) implements CustomPacketPayload {
-        public static final Type<ThrowAnimPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "throw_anim"));
+        public static final Type<ThrowAnimPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("cooptest", "throw_anim"));
         public static final StreamCodec<FriendlyByteBuf, ThrowAnimPayload> CODEC = StreamCodec.ofMember(
                 (payload, buf) -> buf.writeUUID(payload.playerId),
                 buf -> new ThrowAnimPayload(buf.readUUID())
@@ -48,7 +48,7 @@ public class PoseNetworking {
         public Type<? extends CustomPacketPayload> type() { return ID; }
     }
     public record AnimStateSyncPayload(UUID playerId, int animStateOrdinal) implements CustomPacketPayload {
-        public static final Type<AnimStateSyncPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("cooptest", "anim_state_sync"));
+        public static final Type<AnimStateSyncPayload> ID = new Type<>(Identifier.fromNamespaceAndPath("cooptest", "anim_state_sync"));
         public static final StreamCodec<FriendlyByteBuf, AnimStateSyncPayload> CODEC = StreamCodec.ofMember(
                 (payload, buf) -> {
                     buf.writeUUID(payload.playerId);
@@ -83,7 +83,7 @@ public class PoseNetworking {
                 }
                 if (state == PoseState.PUSH_IDLE) {
                     if (requester != null && !requester.getMainHandItem().isEmpty()) {
-                        requester.displayClientMessage(net.minecraft.network.chat.Component.literal("§cHold nothing in your main hand to push!"), true);
+                        com.cooptest.neoforge.PlayerActions.message(requester, net.minecraft.network.chat.Component.literal("§cHold nothing in your main hand to push!"), true);
                         ServerPlayNetworking.send(requester, new PoseSyncPayload(id, PoseState.NONE.ordinal()));
                         return;
                     }
@@ -206,7 +206,7 @@ public class PoseNetworking {
         }
     }
     public static void broadcastAnimState(ServerPlayer sourcePlayer, int animStateOrdinal) {
-        var server = sourcePlayer.getServer();
+        var server = sourcePlayer.level().getServer();
         if (server == null) return;
         UUID playerId = sourcePlayer.getUUID();
         AnimStateSyncPayload payload = new AnimStateSyncPayload(playerId, animStateOrdinal);

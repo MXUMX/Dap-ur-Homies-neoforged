@@ -10,7 +10,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import org.lwjgl.glfw.GLFW;
@@ -34,7 +34,7 @@ public class HighFiveClientHandler {
     private static final Map<UUID, Boolean> frozenPlayers = new HashMap<>();
     public static void register() {
         highFiveKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
-                "key.coopmoves.highfive", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_H, "category.coopmoves"
+                "key.coopmoves.highfive", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_H, net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper.CATEGORY
         ));
         ClientPlayNetworking.registerGlobalReceiver(HighFiveHandler.HandRaisedSyncPayload.ID,
                 (payload, context) -> {
@@ -180,7 +180,7 @@ public class HighFiveClientHandler {
                 inComboWindow = false;
             }
             {
-                long win = Minecraft.getInstance().getWindow().getWindow();
+                long win = Minecraft.getInstance().getWindow().handle();
                 boolean fHeld = GLFW.glfwGetKey(win, GLFW.GLFW_KEY_F) == GLFW.GLFW_PRESS;
                 if (fHeld) {
                     ClientPlayNetworking.send(new HighFiveHugHandler.HugHoldPayload());
@@ -188,9 +188,9 @@ public class HighFiveClientHandler {
             }
             if (!inComboWindow && isKeyPressed && !wasKeyPressed) {
                 if (ChargedDapClientHandler.isLocalPlayerCharging()) {
-                    client.player.displayClientMessage(Component.literal("§cCan't high five while charging dap!"), true);
+                    com.cooptest.neoforge.PlayerActions.message(client.player, Component.literal("§cCan't high five while charging dap!"), true);
                 } else if (!client.player.getMainHandItem().isEmpty()) {
-                    client.player.displayClientMessage(Component.literal("§cHands must be empty for high five!"), true);
+                    com.cooptest.neoforge.PlayerActions.message(client.player, Component.literal("§cHands must be empty for high five!"), true);
                 } else {
                     raisedHands.put(client.player.getUUID(), true);
                     boolean rightClickHeld = client.options.keyUse.isDown();
@@ -231,10 +231,10 @@ public class HighFiveClientHandler {
                 case 3 -> "§c§l⚡ EXPLOSIVE HIGH FIVE! ⚡";
                 default -> "§6 High Five!";
             };
-            client.player.displayClientMessage(Component.literal(message), true);
+            com.cooptest.neoforge.PlayerActions.message(client.player, Component.literal(message), true);
         }
     }
-    private static void renderHUD(GuiGraphics context, DeltaTracker tickCounter) {
+    private static void renderHUD(GuiGraphicsExtractor context, DeltaTracker tickCounter) {
         Minecraft client = Minecraft.getInstance();
         if (client.player == null) return;
         int screenWidth = client.getWindow().getGuiScaledWidth();
@@ -278,7 +278,7 @@ public class HighFiveClientHandler {
             float pulse = (float) (Math.sin(System.currentTimeMillis() / 150.0) * 0.3 + 0.7);
             int alpha = (int) (pulse * 255);
             int color = (alpha << 24) | 0xFFFF00;
-            context.drawString(client.font, text, textX, textY, color, true);
+            context.text(client.font, text, textX, textY, color, true);
         }
         if (inComboWindow && !FusionClientHandler.isQTEOpen() && !FusionClientHandler.isGWindowOpen()) {
             long elapsed = System.currentTimeMillis() - comboWindowStart;
@@ -299,7 +299,7 @@ public class HighFiveClientHandler {
                         ? (alpha << 24) | 0xFFFF00 : (alpha << 24) | 0xFF4400;
                 String text = "[" + gKey + " + " + hKey + "] Combo  [" + gKey + "] Hug";
                 int tw = client.font.width(text);
-                context.drawString(client.font, text,
+                context.text(client.font, text,
                         (screenWidth - tw) / 2, screenHeight / 2 + 10, color, true);
             }
         }

@@ -20,7 +20,7 @@ public class MahitoItems {
 
     public static final DeferredHolder<Potion, Potion> MAHITO_POTION = POTIONS.register(
             "mahito_stuff",
-            () -> new Potion(new MobEffectInstance(ModEffects.MAHITO, 1200, 0))
+            () -> new Potion("mahito_stuff", new MobEffectInstance(ModEffects.MAHITO, 1200, 0))
     );
 
     public static void registerNeoForge(IEventBus modEventBus) {

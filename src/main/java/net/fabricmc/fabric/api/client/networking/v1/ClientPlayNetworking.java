@@ -23,6 +23,6 @@ public final class ClientPlayNetworking {
     }
 
     public static void send(CustomPacketPayload payload) {
-        PacketDistributor.sendToServer(payload);
+        net.neoforged.neoforge.client.network.ClientPacketDistributor.sendToServer(payload);
     }
 }

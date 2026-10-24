@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:function",
+  "function": "coopmoves_tests:grab_dismount",
+  "environment": "minecraft:default",
+  "structure": "coopmoves_tests:empty",
+  "max_ticks": 100
+}

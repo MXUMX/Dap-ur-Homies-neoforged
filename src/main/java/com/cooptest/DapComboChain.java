@@ -47,7 +47,7 @@ public class DapComboChain {
             this.p2Id = p2.getUUID();
             this.p1Ref = p1;
             this.p2Ref = p2;
-            this.world = p1.serverLevel();
+            this.world = p1.level();
             this.impactPos = pos;
             this.stage = 0;
             this.ticksInStage = 0;
@@ -110,8 +110,8 @@ public class DapComboChain {
         if (!button.equals(session.expectedButton)) {
             String who = player.getName().getString();
             Component msg = Component.literal("§c" + who + " pressed the wrong button!");
-            session.p1Ref.displayClientMessage(msg, true);
-            session.p2Ref.displayClientMessage(msg, true);
+            com.cooptest.neoforge.PlayerActions.message(session.p1Ref, msg, true);
+            com.cooptest.neoforge.PlayerActions.message(session.p2Ref, msg, true);
             closeQTEWindow(session);
             session.evaluated = true;
             session.stage = -(session.stage + 1);
@@ -263,8 +263,8 @@ public class DapComboChain {
                 com.cooptest.client.CoopAnimationHandler.AnimState.PERFECT_DAP_MYBOY_P1.ordinal());
         ServerPlayNetworking.send(s.p1Ref, new ChargedDapHandler.PerfectDapFreezePayload(false));
         ServerPlayNetworking.send(s.p2Ref, new ChargedDapHandler.PerfectDapFreezePayload(false));
-        s.p1Ref.displayClientMessage(Component.literal("§d§l★ MY BOY! ★"), true);
-        s.p2Ref.displayClientMessage(Component.literal("§d§l★ MY BOY! ★"), true);
+        com.cooptest.neoforge.PlayerActions.message(s.p1Ref, Component.literal("§d§l★ MY BOY! ★"), true);
+        com.cooptest.neoforge.PlayerActions.message(s.p2Ref, Component.literal("§d§l★ MY BOY! ★"), true);
         spawnFinishEffect(s);
     }
     private static void tickStage3(ComboSession s) {
@@ -331,7 +331,7 @@ public class DapComboChain {
                 40, 0.5, 0.5, 0.5, 0.2);
         s.world.sendParticles(ParticleTypes.END_ROD, mid.x, mid.y, mid.z,
                 20, 0.3, 0.8, 0.3, 0.1);
-        s.world.sendParticles(ParticleTypes.FLASH, mid.x, mid.y, mid.z,
+        s.world.sendParticles(net.minecraft.core.particles.ColorParticleOption.create(ParticleTypes.FLASH, 0xFFFFFFFF), mid.x, mid.y, mid.z,
                 2, 0, 0, 0, 0);
         s.world.playSound(null, mid.x, mid.y, mid.z,
                 SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 2.0f, 0.8f);
@@ -357,14 +357,14 @@ public class DapComboChain {
         String who;
         if (!s.p1Pressed && !s.p2Pressed) {
             Component msg = Component.literal("§cBoth players missed!");
-            s.p1Ref.displayClientMessage(msg, true);
-            s.p2Ref.displayClientMessage(msg, true);
+            com.cooptest.neoforge.PlayerActions.message(s.p1Ref, msg, true);
+            com.cooptest.neoforge.PlayerActions.message(s.p2Ref, msg, true);
             return;
         }
         who = !s.p1Pressed ? s.p1Ref.getName().getString() : s.p2Ref.getName().getString();
         Component msg = Component.literal("§c" + who + " missed the extend!");
-        s.p1Ref.displayClientMessage(msg, true);
-        s.p2Ref.displayClientMessage(msg, true);
+        com.cooptest.neoforge.PlayerActions.message(s.p1Ref, msg, true);
+        com.cooptest.neoforge.PlayerActions.message(s.p2Ref, msg, true);
     }
     private static void cleanup(ComboSession s, boolean success) {
         if (s.qteWindowOpen) closeQTEWindow(s);

@@ -131,14 +131,14 @@ public class QTEManager {
             return;
         }
         if (!button.equals(session.expectedButton)) {
-            player.displayClientMessage(Component.literal("§c§lWRONG BUTTON!"), true);
+            com.cooptest.neoforge.PlayerActions.message(player, Component.literal("§c§lWRONG BUTTON!"), true);
             return;
         }
         if (session.phase != QTESession.QTEPhase.ACTIVE) {
             if (session.phase == QTESession.QTEPhase.WAIT) {
-                player.displayClientMessage(Component.literal("§c§lTOO EARLY!"), true);
+                com.cooptest.neoforge.PlayerActions.message(player, Component.literal("§c§lTOO EARLY!"), true);
             } else {
-                player.displayClientMessage(Component.literal("§c§lTOO LATE!"), true);
+                com.cooptest.neoforge.PlayerActions.message(player, Component.literal("§c§lTOO LATE!"), true);
             }
             return;
         }
@@ -195,12 +195,12 @@ public class QTEManager {
             case GRACE -> {
                 if (session.ticksInStage >= TIMEOUT_GRACE_TICKS) {
                     if (session.player1Ref != null) {
-                        session.player1Ref.displayClientMessage(Component.literal("§c§l✖ MISSED!"), true);
+                        com.cooptest.neoforge.PlayerActions.message(session.player1Ref, Component.literal("§c§l✖ MISSED!"), true);
                         ServerPlayNetworking.send(session.player1Ref,
                                 new QTEClearPayload(session.player1Id));
                     }
                     if (session.player2Ref != null && !session.isSolo) {
-                        session.player2Ref.displayClientMessage(Component.literal("§c§l✖ MISSED!"), true);
+                        com.cooptest.neoforge.PlayerActions.message(session.player2Ref, Component.literal("§c§l✖ MISSED!"), true);
                         ServerPlayNetworking.send(session.player2Ref,
                                 new QTEClearPayload(session.player2Id));
                     }
@@ -238,13 +238,13 @@ public class QTEManager {
             if (session.player1Ref != null) {
                 ServerPlayNetworking.send(session.player1Ref,
                         new QTEClearPayload(session.player1Id));
-                session.player1Ref.displayClientMessage(
+                com.cooptest.neoforge.PlayerActions.message(session.player1Ref,
                         Component.literal("§a§l✓ STAGE " + session.currentStage + " CLEAR!"), true);
             }
             if (session.player2Ref != null && !session.isSolo) {
                 ServerPlayNetworking.send(session.player2Ref,
                         new QTEClearPayload(session.player2Id));
-                session.player2Ref.displayClientMessage(
+                com.cooptest.neoforge.PlayerActions.message(session.player2Ref,
                         Component.literal("§a§l✓ STAGE " + session.currentStage + " CLEAR!"), true);
             }
         } else {
@@ -301,11 +301,11 @@ public class QTEManager {
                 ? " §7(Stage " + session.currentStage + "/" + session.maxStages + ")"
                 : "";
         if (session.player1Ref != null) {
-            session.player1Ref.displayClientMessage(
+            com.cooptest.neoforge.PlayerActions.message(session.player1Ref,
                     Component.literal("§e§lPRESS [" + session.expectedButton + "]!" + stageText), true);
         }
         if (session.player2Ref != null && !session.isSolo) {
-            session.player2Ref.displayClientMessage(
+            com.cooptest.neoforge.PlayerActions.message(session.player2Ref,
                     Component.literal("§e§lPRESS [" + session.expectedButton + "]!" + stageText), true);
         }
     }

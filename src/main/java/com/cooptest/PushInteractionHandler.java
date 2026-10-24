@@ -6,7 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.state.BlockState;
@@ -31,7 +31,7 @@ public class PushInteractionHandler {
     private static final HashMap<UUID, Long> cooldowns    = new HashMap<>();
     public  static final HashMap<UUID, Long> pushImmunity = new HashMap<>();
     public  static final HashMap<UUID, Long> lastJumpTime = new HashMap<>();
-    public static final ResourceLocation PUSH_ANIM_ID = ResourceLocation.fromNamespaceAndPath("cooptest", "push_anim");
+    public static final Identifier PUSH_ANIM_ID = Identifier.fromNamespaceAndPath("cooptest", "push_anim");
     public record PushAnimPayload(UUID playerId) implements CustomPacketPayload {
         public static final Type<PushAnimPayload> ID = new Type<>(PUSH_ANIM_ID);
         public static final StreamCodec<FriendlyByteBuf, PushAnimPayload> CODEC =
@@ -46,7 +46,7 @@ public class PushInteractionHandler {
                 .register(PushInteractionHandler::tick);
         net.fabricmc.fabric.api.event.player.UseEntityCallback.EVENT.register(
                 (player, world, hand, entity, hitResult) -> {
-                    if (world.isClientSide) return net.minecraft.world.InteractionResult.PASS;
+                    if (world.isClientSide()) return net.minecraft.world.InteractionResult.PASS;
                     if (!(player instanceof ServerPlayer sp)) return net.minecraft.world.InteractionResult.PASS;
                     if (!(entity instanceof ServerPlayer target)) return net.minecraft.world.InteractionResult.PASS;
                     if (!CoopMovesConfig.get().enablePush) return net.minecraft.world.InteractionResult.PASS;
@@ -106,11 +106,11 @@ public class PushInteractionHandler {
                 readyPushers.put(pusherId, targetId);
                 readyStart.put(pusherId, now);
                 Vec3 mid = pusher.position().add(target.position()).scale(0.5);
-                pusher.serverLevel().playSound(null, mid.x, mid.y, mid.z,
+                pusher.level().playSound(null, mid.x, mid.y, mid.z,
                         net.minecraft.sounds.SoundEvents.NOTE_BLOCK_BELL.value(),
                         net.minecraft.sounds.SoundSource.PLAYERS, 1.0f, 1.8f);
-                pusher.displayClientMessage(net.minecraft.network.chat.Component.literal("§eTell homie to right-click!"), true);
-                target.displayClientMessage(net.minecraft.network.chat.Component.literal("§e[Right-click to launch!]"), true);
+                com.cooptest.neoforge.PlayerActions.message(pusher, net.minecraft.network.chat.Component.literal("§eTell homie to right-click!"), true);
+                com.cooptest.neoforge.PlayerActions.message(target, net.minecraft.network.chat.Component.literal("§e[Right-click to launch!]"), true);
             }
         }
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
@@ -129,7 +129,7 @@ public class PushInteractionHandler {
                     UUID nearbyId = nearby.getUUID();
                     if (!nearbyId.equals(intendedTarget)) {
                         readyPushers.put(pusherId, nearbyId);
-                        nearby.displayClientMessage(net.minecraft.network.chat.Component.literal("§e[Right-click to launch!]"), true);
+                        com.cooptest.neoforge.PlayerActions.message(nearby, net.minecraft.network.chat.Component.literal("§e[Right-click to launch!]"), true);
                     }
                     break;
                 }
@@ -152,12 +152,12 @@ public class PushInteractionHandler {
         LaunchedPlayerTracker.markPlayerAsLaunched(target.getUUID());
         UUID carried = GrabMechanic.holding.get(target.getUUID());
         if (carried != null) {
-            ServerPlayer c = target.getServer().getPlayerList().getPlayer(carried);
+            ServerPlayer c = target.level().getServer().getPlayerList().getPlayer(carried);
             if (c != null) { c.push(0, velocity * 0.85, 0); c.hurtMarked = true;
                 LaunchedPlayerTracker.markPlayerAsLaunched(c.getUUID()); pushImmunity.put(c.getUUID(), now); }
         }
         cooldowns.put(pusher.getUUID(), now);
-        PoseNetworking.broadcastPoseChange(Objects.requireNonNull(pusher.getServer()), pusher.getUUID(), PoseState.PUSH_ACTION);
+        PoseNetworking.broadcastPoseChange(Objects.requireNonNull(pusher.level().getServer()), pusher.getUUID(), PoseState.PUSH_ACTION);
     }
     private static double capToCeiling(ServerPlayer t, double base) {
         BlockPos pos = t.blockPosition();
